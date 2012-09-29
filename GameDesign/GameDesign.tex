@@ -1,0 +1,35 @@
+\documentclass{article}
+\usepackage{amsmath}
+\begin{document}
+
+\title{Birds: Game Design}
+\author{Karl Hiner, Dustin Schmidt}
+\maketitle
+
+\section*{Game Overview}
+Birds (yet to be named) will be a strategy game where the player is in control of a single bird amongst a flock of AI-controlled birds.  The player's primary objective is to acquire birds into their ``flock''.
+\\\\
+Birds are considered to be in the player's flock if they are within a certain radius of the player in any direction.  Birds are acquired into the player's flock by eating food and gaining ``rep'' (maybe ``strength'' would make more sense, but I like the idea of Mob-Birds - they could even have fedora hats later, who knows, every game needs a Schtick :)).  As the player eats more food, friendly birds become attracted to the player, and are more likely to ``flock'' with the player (fly close to the player).
+\\\\
+Hawks will occasionally show up to try and eat friendly birds (including the player).  The player has 3 health points to begin with, and will lose one health point for each strike from a hawk.  Other friendly birds, however, can only suffer one strike from a hawk, and will be removed from play after a hawk strike.
+\\\\
+Food is randomly distributed throughout the map at the beginning of the game, and will randomly spawn throughout the lifetime of the game.  Different food types will have different rep values, and special types of food can also replenish one health point. (This will take some planning, but an interesting gameplay component could be the need to distribute food to other birds in your flock, each bird could gradualy lose energy (indicated by color?).  We could even change the whole game to have an objective of finding food and delivering it to nests, to gain rep/whatever.  Or this could be a component.  There could be a choice element of whether to spend food on gaining rep or replenishing your flock).
+\\\\
+
+\section*{AI Strategies}
+
+The backbone of the AI for Birds is a goal-driven technique called Collaborative Diffusion (CD).  CD can be thought of as a diffusion of scents throughout a grid.  These ``scents'' are just number values that are assigned to a cell in the play-grid.  They originate at point of interest (such as a food item, or an enemy), and they spread (diffuse) throughout the map using very simple local rules.  Here are the basic steps of CD:
+\\
+For each frame (or turn):
+\\
+1. Assign the highest possible value to the cells that hold features of interest.  Cells can have more than one ``type'' of value, indicating different goals.
+\\
+2. Iterate through each cell in the play-grid.  For each cell, assign it diffusion value(s) as a weighted sum of its neighbor's diffusion values. (Optionally, some cells can be always given a diffusion value of $0$, such as walls and barriers).
+\\
+3. Repeat step 2 for a desired number of iterations.  The accuracy and usefullness of the diffusion grid increases with the number of iterations, so the number of iterations is usually chosen only for performance considerations.
+\\
+4. After determining all diffusion values for all grid cells, simply move the agents in the game (in this case, birds), to the adjascent square with the highest diffusion value corresponding to their current goal (or a weighted combination of several goals).
+\\
+\section*{Platform/Environment}
+
+\end{document}
