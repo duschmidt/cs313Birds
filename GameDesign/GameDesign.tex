@@ -7,29 +7,47 @@
 \maketitle
 
 \section*{Game Overview}
+\subsection*{Main Objective}
 Birds (yet to be named) will be a strategy game where the player is in control of a single bird amongst a flock of AI-controlled birds.  The player's primary objective is to acquire birds into their ``flock''.
+\subsection*{Gameplay Details}
+\subsubsection*{Grow Your Flock}
+Birds are considered to be in the player's flock if they are within a certain radius of the player in any direction.  Birds are acquired into the player's flock by eating food and gaining ``rep''. (Maybe ``strength'' would make more sense, but I like the idea of Mob-Birds gaining rep.  They could even have fedora hats later - who knows, every game needs a Schtick!).  As the player eats more food, friendly birds become attracted to the player, and are more likely to ``flock'' with the player (fly close to the player).
 \\\\
-Birds are considered to be in the player's flock if they are within a certain radius of the player in any direction.  Birds are acquired into the player's flock by eating food and gaining ``rep'' (maybe ``strength'' would make more sense, but I like the idea of Mob-Birds - they could even have fedora hats later, who knows, every game needs a Schtick :)).  As the player eats more food, friendly birds become attracted to the player, and are more likely to ``flock'' with the player (fly close to the player).
-\\\\
-Hawks will occasionally show up to try and eat friendly birds (including the player).  The player has 3 health points to begin with, and will lose one health point for each strike from a hawk.  Other friendly birds, however, can only suffer one strike from a hawk, and will be removed from play after a hawk strike.
-\\\\
-Food is randomly distributed throughout the map at the beginning of the game, and will randomly spawn throughout the lifetime of the game.  Different food types will have different rep values, and special types of food can also replenish one health point. (This will take some planning, but an interesting gameplay component could be the need to distribute food to other birds in your flock, each bird could gradualy lose energy (indicated by color?).  We could even change the whole game to have an objective of finding food and delivering it to nests, to gain rep/whatever.  Or this could be a component.  There could be a choice element of whether to spend food on gaining rep or replenishing your flock).
-\\\\
+Initially, the game will be an open-ended, point-accumulating game.  Each bird in the player's flock is worth one point, and the goal is to simply set a high-score for most birds in the flock at any time.  Different modes of gameplay, such as time-trials, story-modes, etc., will be considered after the initial development stages.
+
+\subsubsection*{Beware of Hawks}
+Hawks will occasionally show up to try and eat friendly birds (including the player).  The player initially has 3 health points, and will lose one health point for each strike from a hawk.  Other friendly birds, however, can only suffer one strike from a hawk, and will be removed from play after a hawk strike.
+
+\subsubsection*{Food, Nests}
+Food is randomly distributed throughout the map at the beginning of the game, and will randomly spawn throughout the lifetime of the game.  Different food types will have different rep/strength values, and special types of food can also replenish one health point. (A possible gameplay component could be the need to distribute food to other birds in your flock.  Each bird could gradualy lose energy (indicated by color).  One main objective of the game could be finding food and delivering it to nests, to gain rep/whatever.  There could be a choice element of whether to spend food on gaining rep or replenishing your flock).
 
 \section*{AI Strategies}
-
-The backbone of the AI for Birds is a goal-driven technique called Collaborative Diffusion (CD).  CD can be thought of as a diffusion of scents throughout a grid.  These ``scents'' are just number values that are assigned to a cell in the play-grid.  They originate at point of interest (such as a food item, or an enemy), and they spread (diffuse) throughout the map using very simple local rules.  Here are the basic steps of CD:
-\\
+\subsection*{Collaborative Diffusion (CD)}
+\subsubsection*{CD Overview}
+The backbone of the AI for Birds is a goal-driven technique called Collaborative Diffusion (CD).  CD can be thought of as a diffusion of scents throughout a grid.  These ``scents'' are just floating-point values that are assigned to a cell in the play-grid.  They originate at point of interest (such as a food item, or an enemy), and they spread (diffuse) throughout the map using very simple local rules.  Here are the basic steps of CD:
+\\\\
 For each frame (or turn):
 \\
-1. Assign the highest possible value to the cells that hold features of interest.  Cells can have more than one ``type'' of value, indicating different goals.
+1. Assign the highest possible diffusion value to the cells that hold features of interest.  Cells can have more than one ``type'' of value, indicating different goals.
 \\
 2. Iterate through each cell in the play-grid.  For each cell, assign it diffusion value(s) as a weighted sum of its neighbor's diffusion values. (Optionally, some cells can be always given a diffusion value of $0$, such as walls and barriers).
 \\
 3. Repeat step 2 for a desired number of iterations.  The accuracy and usefullness of the diffusion grid increases with the number of iterations, so the number of iterations is usually chosen only for performance considerations.
 \\
-4. After determining all diffusion values for all grid cells, simply move the agents in the game (in this case, birds), to the adjascent square with the highest diffusion value corresponding to their current goal (or a weighted combination of several goals).
-\\
-\section*{Platform/Environment}
+4. After determining all diffusion values for all grid cells, simply move the agents in the game (in this case, birds), to the adjascent square with the highest diffusion value corresponding to their current goal (or a weighted combination of several goals).  With enough iterations, this path approaches an optimal shortest-path from any agent to a point of interest.
+\subsubsection*{Benefits of Collaborative Diffusion Approach}
+Not only is collaborative diffusion an efficient way to find shortest paths for many agents to many goals, but it is also known to result in unpredictable, emergent behavior, especially as many goals are being diffused.
+\\\\
+Division of labor can be acheived by making certain agents attracted to certain ``scents'' (diffusion goals).  For example, some agents could be dedicated explorers, while others could be dedicated to seeking out and engaging combatants.
+\\\\
+Dynamic goal-changing comes for free with collaborative diffusion when movement choices are made as a function of multiple diffusion value types.  Depending on game-state and circumstance, more weight can be given to different values.  For instance, food diffusion goals can be given more weight as strength decreases for a bird.  Thus, if such a weak bird is presented with a choice of following a path to food or a path to fight an enemy, food will be preferred by simply changing one weight paramater.
 
+\section*{Platform/Environment}
+Birds will be written in Python, using Numpy, and possibly Scipy, for efficiency in numeric computations.
+\\\\
+Initially, the game will be in 2D, using the Python-included tkinter 2D library.  We plan to move to a 3D environment after this proof-of-concept phase.\\\\
+Depending on Windows compatability, the following Python 3D libraries are currently being considered:\\
+1.  \textbf{Soya}: Intuitive and powerful high-level language.  The downside here is the lack of \textit{stable} support for Windows.\\
+2.  \textbf{PyGame / PyOpenGL}: We would prefer to avoid these engines, as they are essentially wrappers around OpenGL, and have little to no high-level 3D development support. (OpenGL is a pain, and it's easy to do the wrong/inefficient thing!)\\
+3.  \textbf{Panda3D}: Currently being explored.\\
 \end{document}
