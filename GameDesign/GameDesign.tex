@@ -47,7 +47,10 @@ Birds will be written in Python, using Numpy, and possibly Scipy, for efficiency
 \\\\
 Initially, the game will be in 2D, using the Python-included tkinter 2D library.  We plan to move to a 3D environment after this proof-of-concept phase.\\\\
 Depending on Windows compatability, the following Python 3D libraries are currently being considered:\\
-1.  \textbf{Soya}: Intuitive and powerful high-level language.  The downside here is the lack of \textit{stable} support for Windows.\\
-2.  \textbf{PyGame / PyOpenGL}: We would prefer to avoid these engines, as they are essentially wrappers around OpenGL, and have little to no high-level 3D development support. (OpenGL is a pain, and it's easy to do the wrong/inefficient thing!)\\
-3.  \textbf{Panda3D}: Currently being explored.\\
+\begin{enumerate}
+\item \textbf{Soya}: Intuitive and powerful high-level 3D library for Python.  The downside here is the lack of \textit{stable} support for Windows.\\
+\item \textbf{PyOpenGL}: We would prefer to avoid this engine, as it is merely a wrapper around OpenGL, and has little to no high-level 3D development support. (OpenGL is a pain, and it's easy to do the wrong/inefficient thing!)\\
+\item \textbf{PyGame}: This framework only provides 2D graphics and wrappers for OpenGL but it does afford other useful mechanisms such as efficiently updating sprites and joystick interaction.
+\item \textbf{Panda3D}: A more modern high level 3D graphics library for Python and C++.  Provides the same features as Soya and more.  More recently maintained project than Soya\\
+\end{enumerate}
 \end{document}
