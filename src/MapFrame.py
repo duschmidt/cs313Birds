@@ -5,14 +5,14 @@ import scipy.signal as sig
 import random as rand
 from Bird import Bird
 
-numBirds = 20 # number of birds in the map
-goalProb = 0.1 # the probability that new food will appear
+numBirds = 8 # number of birds in the map
+goalProb = 0.005 # the probability that new food will appear
 deltaT = 1 # time per frame in ms
-diffuseAmt = 0.2 # diffusion constant - lower == less diffusion
+diffuseAmt = 0.5 # diffusion constant - lower == less diffusion
 # diffusion kernel
-diffusionKernel = np.array([[0,          diffuseAmt,  0         ],
+diffusionKernel = np.array([[diffuseAmt, diffuseAmt,  diffuseAmt],
                             [diffuseAmt, 1,           diffuseAmt],
-                            [0,          diffuseAmt,  0         ]])
+                            [diffuseAmt, diffuseAmt,  diffuseAmt]])
 
 class Cell:
     col = 0
