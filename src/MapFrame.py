@@ -3,14 +3,16 @@ import Tkinter as tkinter
 import numpy as np
 import scipy.signal as sig
 import random as rand
+import Bird
 
 class MapFrame(Frame):
         # width / height of canvas in pixels
 	canvasWidth = 400
 	canvasHeight = 400
         deltaT = 1 # time per frame in ms
-        goals = []
+        goals = [] # list to hold goal positions
         diffuseAmt = 0.2
+        # diffusion kernel
         kernel = np.array([[0,          diffuseAmt,  0         ],
                            [diffuseAmt, 1,           diffuseAmt],
                            [0,          diffuseAmt,  0         ]])
@@ -29,8 +31,9 @@ class MapFrame(Frame):
                 # width / height of canvas in pixels
                 self.cellWidth  = self.canvasWidth / float(self.numCols)
                 self.cellHeight = self.canvasHeight / float(self.numRows)
-                
+
                 self.initGoals()
+                self.bird = Bird.Bird(self)
                 
 	def createWidgets(self):
 		self.menubar = Menu(self.master)
@@ -52,21 +55,21 @@ class MapFrame(Frame):
 		pass
 
         def pointToCell(self, x, y):
-            return ((int)(x / self.cellWidth), (int)(y / self.cellHeight))
+            return [(int)(x / self.cellWidth), (int)(y / self.cellHeight)]
             
         def leftClick(self, event):
             """Left click adds/removes goal objects from the grid"""
-            (x, y) = self.pointToCell(event.x, event.y)
-            if (x, y) in self.goals:
-                self.goals.remove((x, y))
+            [x, y] = self.pointToCell(event.x, event.y)
+            if [x, y] in self.goals:
+                self.goals.remove([x, y])
             else:
-                self.goals.append((x, y))
+                self.goals.append([x, y])
 
         def initGoals(self):
                 for x in xrange(self.numCols):
                         for y in xrange(self.numRows):
                                 if rand.random() < .01:
-                                        self.goals.append((x, y))
+                                        self.goals.append([x, y])
 
         def seedDiffusion(self):
             """Set all cells which hold goals to a max diffusion value of 1 and all other cells to 0"""
@@ -84,13 +87,15 @@ class MapFrame(Frame):
                         max = np.max(self.npAry)
                         if max != 0:
                                 self.npAry /= np.max(self.npAry)
-                                
+            
 	def getColor(self, x, y):
-                if (x, y) in self.goals:
-                        return "#FF0000"
+                if [x, y] in self.goals:
+                    return "#FF0000"
+                elif [x, y] == [self.bird.x, self.bird.y]:
+                    return self.bird.color
                 else:
-                        return "#%02XFFFF" % int(abs(255 * (1 - self.npAry[x,y])))
-                
+                    return "#%02XFFFF" % int(abs(255 * (1 - self.npAry[x,y])))
+
         def drawCell(self, x, y):
                 """Draw a single cell at pos (x, y), filled with specified color"""
                 color = self.getColor(x, y)
@@ -110,6 +115,7 @@ class MapFrame(Frame):
         def drawFrame(self):
             """Main draw method, to be called every frame"""
             self.Surface.after(self.deltaT)
+            self.bird.move()
             self.seedDiffusion()
             self.diffuse(numDiffusions=20)
             self.drawGrid()
