@@ -10,6 +10,5 @@ import numpy as np
 ary = np.zeros((40, 40))
 
 mainFrame = mf.MapFrame(ary)
-while True:
-    mainFrame.drawFrame()
-mainFrame.mainLoop()
+mainFrame.drawFrame()
+#mainFrame.mainloop()
