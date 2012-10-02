@@ -2,14 +2,17 @@ from Tkinter import Frame, Tk, Menu, Canvas
 import Tkinter as tkinter
 import numpy as np
 import scipy.signal as sig
+import random as rand
 
 class MapFrame(Frame):
-	canvasWidth = 200
-	canvasHeight = 200
+        # width / height of canvas in pixels
+	canvasWidth = 400
+	canvasHeight = 400
+        # number of horizontal / vertical grid cells
+        numCols = 0
+        numRows = 0
 
 	def __init__(self, npAry, master = Tk()):
-		""""""
-
 		Frame.__init__(self, master = master)
 		self.master = master
 		self.master.title("Diffusion Map Display")
@@ -17,8 +20,10 @@ class MapFrame(Frame):
 		self.createWidgets()
 		self.pack()
 		self.npAry = npAry
-		self.drawArray(npAry)
-
+                self.numCols = npAry.shape[0]
+                self.numRows = npAry.shape[1]
+                self.initRandomSeeds()
+                
 	def createWidgets(self):
 		self.menubar = Menu(self.master)
 		fileMenu = Menu(self.menubar, tearoff=0)
@@ -35,49 +40,44 @@ class MapFrame(Frame):
 		self.Surface.grid(row=0,column=0)
 		self.Surface.bind("<Button-1>", self.leftClick)
 
-
 	def dummy(self):
 		pass
 
 	def getColor(self, value):
-		#return "#FF0000"
-		return "#%02XFFFF" % int(abs(255 *(1-value))%256)
+		return "#%02XFFFF" % int(abs(255 * (1 - value)))
 
-	def leftClick(self, event):
-		import random
-		#if random.random() > 0.8:
-		#	self.npAry[random.randint(0,24),random.randint(0,24)] = 1.0
-		
-		self.npAry = self.diffusion(self.npAry)
-
-		#self.npAry = sig.convolve2d(np.array([[0,0.2,0],[0.2,1.0,0.2],[0,0.2,0]]),self.npAry)
-		#elf.npAry = sig.convolve2d(self.npAry,np.array([[0,0.2,0],[0.2,1.0,0.2],[0,0.2,0]]))
-		self.npAry[10,10]=1.0
-		#sself.npAry = self.npAry + np.random.random(self.npAry.shape)
+        def initRandomSeeds(self):
+                for x in xrange(self.numCols):
+                        for y in xrange(self.numRows):
+                                if rand.random() < .01:
+                                        self.npAry[x, y] = 1
+                                        
+        def leftClick(self, event):
+		self.diffuse(numDiffusions=5, diffuseAmt=0.2)
 		self.drawArray(self.npAry)
 
-	#Adapted from http://stackoverflow.com/questions/8102781/efficiently-doing-diffusion-on-a-2d-map-in-python
-	def diffusion(self, arr):
-		arr2 = arr.copy()
-		arr2+=0.2*np.roll(arr,shift=1,axis=1) # right
-		arr2+=0.2*np.roll(arr,shift=-1,axis=1) # left
-		arr2+=0.2*np.roll(arr,shift=1,axis=0) # down
-		arr2+=0.2*np.roll(arr,shift=-1,axis=0) # up
-		return arr2
-	#END ADAPTED#################################################################
+        #Adapted from http://stackoverflow.com/questions/8102781/efficiently-doing-diffusion-on-a-2d-map-in-python
+        def diffuse(self, numDiffusions, diffuseAmt):
+                kernel = np.array([[0,          diffuseAmt,  0         ],
+                                   [diffuseAmt, 1,           diffuseAmt],
+                                   [0,          diffuseAmt,  0         ]])
+                for i in xrange(numDiffusions):
+                        # mode='same' means the output array should be the same size
+                        # bounary='wrap' means to wrap the convolution around the array dimensions
+                        self.npAry = sig.convolve2d(self.npAry, kernel, mode='same', boundary='wrap')
+                        # convolution is unbounded, so scale the array to range [0, 1]
+                        max = np.max(self.npAry)
+                        if max != 0:
+                                self.npAry = self.npAry / np.max(self.npAry)
+                        
 	def drawArray(self, npAry):
 		"""Draws the values in a 2D npAry"""
 		self.Surface.delete(tkinter.ALL)
-		arySize = npAry.shape
-		cols = arySize[0]
-		rows = arySize[1]
+		xStep = self.canvasWidth / float(self.numCols)
+		yStep = self.canvasHeight / float(self.numRows)
 
-		xStep = self.canvasWidth / float(cols)
-		yStep = self.canvasHeight / float(rows)
-
-		for x in range(cols):
-			for y in range(rows):
-
+		for x in range(self.numCols):
+			for y in range(self.numRows):
 				color = self.getColor(npAry[x,y])
 				x1 = x*xStep
 				y1 = (y+1.0)*yStep

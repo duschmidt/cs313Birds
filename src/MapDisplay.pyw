@@ -7,7 +7,7 @@ except(ImportError):
 import MapFrame as mf 
 import numpy as np
 
-ary = np.zeros((20,20))
+ary = np.zeros((40, 40))
 
 mainFrame = mf.MapFrame(ary)
 mainFrame.mainloop()
