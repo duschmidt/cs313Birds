@@ -149,9 +149,9 @@ class MapFrame(Frame):
                 # bounary='wrap' means to wrap the convolution around the array dimensions
                 self.diffusionAry = sig.convolve2d(self.diffusionAry, diffusionKernel, mode='same', boundary='wrap')
                 # convolution is unbounded, so scale the array to range [0, 1]
-                max = np.max(self.diffusionAry)
-                if max != 0:
-                    self.diffusionAry /= np.max(self.diffusionAry)
+            max = np.max(self.diffusionAry)
+            if max != 0:
+                self.diffusionAry /= np.max(self.diffusionAry)
             
 	def getColor(self, cell):
             return "#%02XFFFF" % int(abs(255 * (1 - self.diffusionAry[cell.col, cell.row])))
