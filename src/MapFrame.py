@@ -9,6 +9,7 @@ class MapFrame(Frame):
         # width / height of canvas in pixels
 	canvasWidth = 400
 	canvasHeight = 400
+        birds = [] # list of birds in the map
         deltaT = 1 # time per frame in ms
         goals = [] # list to hold goal positions
         diffuseAmt = 0.2
@@ -16,6 +17,7 @@ class MapFrame(Frame):
         kernel = np.array([[0,          diffuseAmt,  0         ],
                            [diffuseAmt, 1,           diffuseAmt],
                            [0,          diffuseAmt,  0         ]])
+        
         
 	def __init__(self, npAry, master = Tk()):
 		Frame.__init__(self, master = master)
@@ -33,7 +35,8 @@ class MapFrame(Frame):
                 self.cellHeight = self.canvasHeight / float(self.numRows)
 
                 self.initGoals()
-                self.bird = Bird.Bird(self)
+                for i in range(10):
+                    self.birds.append(Bird.Bird(self))
                 
 	def createWidgets(self):
 		self.menubar = Menu(self.master)
@@ -50,11 +53,19 @@ class MapFrame(Frame):
 		self.Surface = Canvas(self, width=self.canvasWidth, height = self.canvasHeight, bg="#FFFFFF")
 		self.Surface.grid(row=0,column=0)
 		self.Surface.bind("<Button-1>", self.leftClick)
-                    
+
+        def occupied(self, x, y):
+            """Returns true if a bird is occupying the cell at x, y.  Returns false otherwise"""
+            for bird in self.birds:
+                if bird.x == x and bird.y == y:
+                    return True
+            return False
+            
 	def dummy(self):
 		pass
 
         def pointToCell(self, x, y):
+            """Convert a pixel x, y point to a cell row, col pair"""
             return [(int)(x / self.cellWidth), (int)(y / self.cellHeight)]
             
         def leftClick(self, event):
@@ -66,10 +77,11 @@ class MapFrame(Frame):
                 self.goals.append([x, y])
 
         def initGoals(self):
-                for x in xrange(self.numCols):
-                        for y in xrange(self.numRows):
-                                if rand.random() < .01:
-                                        self.goals.append([x, y])
+            """Populate the map randomly with goals"""
+            for x in xrange(self.numCols):
+                for y in xrange(self.numRows):
+                    if rand.random() < .01:
+                        self.goals.append([x, y])
 
         def seedDiffusion(self):
             """Set all cells which hold goals to a max diffusion value of 1 and all other cells to 0"""
@@ -91,14 +103,11 @@ class MapFrame(Frame):
 	def getColor(self, x, y):
                 if [x, y] in self.goals:
                     return "#FF0000"
-                elif [x, y] == [self.bird.x, self.bird.y]:
-                    return self.bird.color
                 else:
                     return "#%02XFFFF" % int(abs(255 * (1 - self.npAry[x,y])))
 
-        def drawCell(self, x, y):
+        def drawCell(self, x, y, color):
                 """Draw a single cell at pos (x, y), filled with specified color"""
-                color = self.getColor(x, y)
                 x1 = x * self.cellWidth
                 y1 = (y + 1) * self.cellHeight
                 x2 = (x + 1) * self.cellWidth
@@ -110,13 +119,21 @@ class MapFrame(Frame):
 		self.Surface.delete(tkinter.ALL)
 		for x in xrange(self.numCols):
 			for y in xrange(self.numRows):
-                                self.drawCell(x, y)
+                                self.drawCell(x, y, self.getColor(x, y))
 
+        def drawBirds(self):
+            for bird in self.birds:
+                bird.move()
+                self.drawCell(bird.x, bird.y, bird.color)
+                
         def drawFrame(self):
             """Main draw method, to be called every frame"""
-            self.Surface.after(self.deltaT)
-            self.bird.move()
+            #self.Surface.after(self.deltaT)
+            # randomly generate a goal from time to time
+            if rand.random() < .2:
+                self.goals.append([rand.randint(0, self.numCols - 1), rand.randint(0, self.numRows - 1)])
             self.seedDiffusion()
             self.diffuse(numDiffusions=20)
             self.drawGrid()
+            self.drawBirds()
             self.Surface.update()
