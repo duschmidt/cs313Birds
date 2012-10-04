@@ -92,7 +92,7 @@ class MapFrame(Frame):
 
         def loadMap(self, mapFileName):
             # load character encoding from the given map file
-            mapEncoding = np.loadtxt(mapFileName)
+            mapEncoding = np.loadtxt(mapFileName, dtype='c')
             # store number of rows/ cols of cells in grid
             print mapEncoding[0][0]
             self.numCols = mapEncoding.shape[0]
@@ -183,13 +183,13 @@ class MapFrame(Frame):
                 # mode='same' means the output array should be the same size
                 # bounary='wrap' means to wrap the convolution around the array dimensions
                 #self.diffusionAry = sig.convolve2d(self.diffusionAry, diffusionKernel, mode='same', boundary='wrap')
-                #self.zeroObstacles()
-                ary = self.diffusionAry*self.obstacleAry
-                ary += 0.5*np.roll(self.diffusionAry, 1, 0)*self.obstacleAry
-                ary += 0.5*np.roll(self.diffusionAry, -1, 0)*self.obstacleAry
-                ary += 0.5*np.roll(self.diffusionAry, 1, 1)*self.obstacleAry
-                ary += 0.5*np.roll(self.diffusionAry, -1, 1)*self.obstacleAry
-                self.diffusionAry = ary*self.obstacleAry            
+                self.zeroObstacles()
+                ary = self.diffusionAry
+                ary += 0.5*np.roll(self.diffusionAry, 1, 0)
+                ary += 0.5*np.roll(self.diffusionAry, -1, 0)
+                ary += 0.5*np.roll(self.diffusionAry, 1, 1)
+                ary += 0.5*np.roll(self.diffusionAry, -1, 1)
+                self.diffusionAry = ary            
             # convolution is unbounded, so scale the array to range [0, 1]
             max = np.max(self.diffusionAry)
             if max > 0:
