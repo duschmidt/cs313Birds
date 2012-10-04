@@ -1,7 +1,7 @@
 from Tkinter import Frame, Tk, Menu, Canvas
 import Tkinter as tkinter
 import numpy as np
-import scipy.signal as sig
+#import scipy.signal as sig
 import random as rand
 from Bird import Bird
 
@@ -92,7 +92,7 @@ class MapFrame(Frame):
 
         def loadMap(self, mapFileName):
             # load character encoding from the given map file
-            mapEncoding = np.loadtxt(mapFileName, dtype='c')
+            mapEncoding = np.loadtxt(mapFileName)
             # store number of rows/ cols of cells in grid
             print mapEncoding[0][0]
             self.numCols = mapEncoding.shape[0]
@@ -102,7 +102,7 @@ class MapFrame(Frame):
             Cell.height = self.canvasHeight / float(self.numRows)
             # initialize diffusion array to zeros
             self.diffusionAry = np.zeros((self.numCols, self.numRows))
-            
+            self.obstacleAry = mapEncoding
             for col in xrange(self.numCols):
                 self.cells.append([])
                 for row in xrange(self.numRows):
@@ -182,13 +182,18 @@ class MapFrame(Frame):
             for i in xrange(numDiffusions):
                 # mode='same' means the output array should be the same size
                 # bounary='wrap' means to wrap the convolution around the array dimensions
-                self.diffusionAry = sig.convolve2d(self.diffusionAry, diffusionKernel, mode='same', boundary='wrap')
-                self.zeroObstacles()
-                            
+                #self.diffusionAry = sig.convolve2d(self.diffusionAry, diffusionKernel, mode='same', boundary='wrap')
+                #self.zeroObstacles()
+                ary = self.diffusionAry*self.obstacleAry
+                ary += 0.5*np.roll(self.diffusionAry, 1, 0)*self.obstacleAry
+                ary += 0.5*np.roll(self.diffusionAry, -1, 0)*self.obstacleAry
+                ary += 0.5*np.roll(self.diffusionAry, 1, 1)*self.obstacleAry
+                ary += 0.5*np.roll(self.diffusionAry, -1, 1)*self.obstacleAry
+                self.diffusionAry = ary*self.obstacleAry            
             # convolution is unbounded, so scale the array to range [0, 1]
             max = np.max(self.diffusionAry)
-            if max != 0:
-                self.diffusionAry /= np.max(self.diffusionAry)
+            if max > 0:
+                self.diffusionAry /= max
                             
 	def drawGrid(self):
             """Fills all the cells in the grid with an appropriate color"""
@@ -216,11 +221,15 @@ class MapFrame(Frame):
                     self.goals.append(self.cells[col][row])
             self.seedDiffusion()
             self.diffuse(numDiffusions=20)
+            
+            #self.diffusionAry = 0.75*self.diffusionAry
             self.drawGrid()
             self.drawBirds()
             self.drawGoals()
             self.Surface.update_idletasks()
             self.Surface.update()
+            import time
+            #time.sleep(0.1)
 
         def mainloop(self):
             self.running = True
