@@ -22,6 +22,6 @@ class Bird:
             self.cell = self.map.cellInDirection(self.cell, direction)
             
         # if bird got to goal, remove goal
-        if self.cell in self.map.goals:
-            self.map.goals.remove(self.cell)
+        if self.cell.type == '*':
+            self.cell.type = '0'
     
