@@ -9,6 +9,6 @@ import numpy as np
 
 ary = np.zeros((40, 40))
 
-mainFrame = mf.MapFrame(ary)
+mainFrame = mf.MapFrame("map2.map")
 mainFrame.drawFrame()
-#mainFrame.mainloop()
+mainFrame.mainloop()
