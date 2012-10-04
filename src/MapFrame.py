@@ -92,9 +92,8 @@ class MapFrame(Frame):
 
     def loadMap(self, mapFileName):
         # load character encoding from the given map file
-        mapEncoding = np.loadtxt(mapFileName, dtype='c')
+        mapEncoding = np.loadtxt(mapFileName)
         # store number of rows/ cols of cells in grid
-        print mapEncoding[0][0]
         self.numCols = mapEncoding.shape[0]
         self.numRows = mapEncoding.shape[1]
         # width / height of canvas in pixels
@@ -105,8 +104,12 @@ class MapFrame(Frame):
         self.obstacleAry = mapEncoding
         for col in xrange(self.numCols):
             self.cells.append([])
+            
             for row in xrange(self.numRows):
-                self.cells[col].append(Cell(self.Surface, col, row, mapEncoding[col, row]))
+                type = "0"
+                if mapEncoding[col,row] == 0:
+                    type = '-'
+                self.cells[col].append(Cell(self.Surface, col, row, type))
         
     def occupied(self, cell):
         """Returns true if a bird is occupying the cell at x, y.  Returns false otherwise"""
@@ -183,12 +186,12 @@ class MapFrame(Frame):
             # mode='same' means the output array should be the same size
             # bounary='wrap' means to wrap the convolution around the array dimensions
             #self.diffusionAry = sig.convolve2d(self.diffusionAry, diffusionKernel, mode='same', boundary='wrap')
-            self.zeroObstacles()
+            #self.zeroObstacles()
             ary = self.diffusionAry
-            ary += 0.5*np.roll(self.diffusionAry, 1, 0)
-            ary += 0.5*np.roll(self.diffusionAry, -1, 0)
-            ary += 0.5*np.roll(self.diffusionAry, 1, 1)
-            ary += 0.5*np.roll(self.diffusionAry, -1, 1)
+            ary += (0.5*np.roll(self.diffusionAry*self.obstacleAry, 1, 0))*self.obstacleAry
+            ary += (0.5*np.roll(self.diffusionAry*self.obstacleAry, -1, 0))*self.obstacleAry
+            ary += (0.5*np.roll(self.diffusionAry*self.obstacleAry, 1, 1))*self.obstacleAry
+            ary += (0.5*np.roll(self.diffusionAry*self.obstacleAry, -1, 1))*self.obstacleAry
             self.diffusionAry = ary            
         # convolution is unbounded, so scale the array to range [0, 1]
         max = np.max(self.diffusionAry)
