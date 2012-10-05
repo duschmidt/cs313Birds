@@ -23,5 +23,5 @@ class Bird:
             
         # if bird got to goal, remove goal
         if self.cell.type == '*':
-            self.cell.type = '0'
+            self.cell.type = '1'
     
