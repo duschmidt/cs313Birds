@@ -68,45 +68,63 @@ class MapFrame(Frame):
         for i in range(numBirds):
             self.birds.append(Bird(self))
                 
-    def dummy(self):
-        """ Dummy function for menu items"""
-        pass
-
-    def pause(self):
-        """Pause the main loop"""
-        self.paused = not self.paused
-        self.runMenu.entryconfig(1, state=ACTIVE) # enable step
-
-    def step(self, event=None):
-        """Step forward one frame.  Only available when paused"""
-        if self.paused:
-            self.drawFrame()
-        
-    def stop(self):
-        """Stop running the main loop"""
-        self.running = False
-
     def createWidgets(self):
-        self.menubar = Menu(self.master)
-        fileMenu = Menu(self.menubar, tearoff=0)
-        self.runMenu = Menu(self.menubar, tearoff=0)
-        fileMenu.add_command(label='Export', command=self.dummy)
-        fileMenu.add_command(label='Properties', command=self.dummy)
-        fileMenu.add_command(label='Save', command=self.dummy)
-        fileMenu.add_command(label='Open', command=self.dummy)
-        fileMenu.add_command(label='Import', command=self.dummy)
-        fileMenu.add_command(label='Close', command=self.stop)
-        self.runMenu.add_checkbutton(label='Pause', command=self.pause)
-        self.runMenu.add_command(label='Step', command=self.step, state=DISABLED, accelerator="CTRL+S")
-        self.bind_all("<Control-s>", self.step)
-        self.menubar.add_cascade(label='File', menu=fileMenu)
-        self.menubar.add_cascade(label='Run', menu=self.runMenu)
-        self.master.config(menu=self.menubar)
+        def dummy():
+            """ Dummy function for menu items"""
+            pass
+
+        def pause():
+            """Pause the main loop"""
+            self.paused = not self.paused
+            self.runMenu.entryconfig(1, state=ACTIVE) # enable step
+
+        def step(event=None):
+            """Step forward one frame.  Only available when paused"""
+            if self.paused:
+                self.drawFrame()
+
+        def stop():
+            """Stop running the main loop"""
+            self.running = False
+        
+        def leftClick(event):
+            """Left click adds/removes goal objects from the grid"""
+            cell = self.pointToCell(event.x, event.y)
+            if cell.type == '*':
+                cell.type = '1'
+            elif cell.type != '0':
+                cell.type = '*'
+
+        def beginRightClick(event):
+            """Right Click shows diffusion val for the clicked cell"""
+            cell = self.pointToCell(event.x, event.y)
+            self.currText = self.Surface.create_text(event.x, event.y, anchor=W, text="Diff Val = " + str(self.diffusionAry[cell.col, cell.row]))
+
+        def endRightClick(event):
+            self.Surface.delete(self.currText)
+        
+        menubar = Menu(self.master)
+        fileMenu = Menu(menubar, tearoff=0)
+        runMenu = Menu(menubar, tearoff=0)
+        fileMenu.add_command(label='Export', command=dummy)
+        fileMenu.add_command(label='Properties', command=dummy)
+        fileMenu.add_command(label='Save', command=dummy)
+        fileMenu.add_command(label='Open', command=dummy)
+        fileMenu.add_command(label='Import', command=dummy)
+        fileMenu.add_command(label='Close', command=stop)
+        runMenu.add_checkbutton(label='Pause', command=pause)
+        runMenu.add_command(label='Step', command=step, state=DISABLED, accelerator="CTRL+S")
+        self.bind_all("<Control-s>", step)
+        menubar.add_cascade(label='File', menu=fileMenu)
+        menubar.add_cascade(label='Run', menu=runMenu)
+        self.master.config(menu=menubar)
 
         self.Surface = Canvas(self, width=self.canvasWidth, height = self.canvasHeight, bg="#FFFFFF")
         self.Surface.grid(row=0,column=0)
-        self.Surface.bind("<Button-1>", self.leftClick)
-
+        self.Surface.bind("<Button-1>", leftClick)
+        self.Surface.bind("<Button-3>", beginRightClick)
+        self.Surface.bind("<ButtonRelease-3>", endRightClick)
+        
     def initCells(self, mapEncoding):
         for col in xrange(self.numCols):
             self.cells.append([])
@@ -165,15 +183,7 @@ class MapFrame(Frame):
     def pointToCell(self, x, y):
         """Convert a pixel x, y point to a cell row, col pair"""
         return self.cells[(int)(x / Cell.width)][(int)(y / Cell.height)]
-
-    def leftClick(self, event):
-        """Left click adds/removes goal objects from the grid"""
-        cell = self.pointToCell(event.x, event.y)
-        if cell.type == '*':
-            cell.type = '1'
-        elif cell.type != '0':
-            cell.type = '*'
-
+            
     def initGoals(self):
         """Populate the map randomly with goals"""
         for col in xrange(self.numCols):
@@ -205,7 +215,8 @@ class MapFrame(Frame):
         for d in xrange(numDiffusions):
             for col in range(self.numCols):
                 for row in range(self.numRows):
-                    if not self.diffusionAry[col][row]:
+                    # if the diffusion == 1, it is food. don't diffuse
+                    if not self.diffusionAry[col][row] == 1:
                         self.diffusionAry[col][row] = diffuseAmt * self.sumOfNeighbors(col, row) * self.obstacleAry[col][row]
 
     #Adapted from http://stackoverflow.com/questions/8102781/efficiently-doing-diffusion-on-a-2d-map-in-python
@@ -249,7 +260,7 @@ class MapFrame(Frame):
                 cell.type = '*'
         self.seedDiffusion()
         if np.max(self.diffusionAry): # are there any goals?
-            self.manualDiffuse(numDiffusions=50)
+            self.diffuse(numDiffusions=50)
         self.drawGrid()
         self.drawBirds()
 
