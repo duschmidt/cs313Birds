@@ -72,6 +72,10 @@ class MapFrame(Frame):
         """ Dummy function for menu items"""
         pass
 
+    def pause(self):
+        """Pause the main loop"""
+        self.paused = not self.paused
+        
     def stop(self):
         """Stop running the main loop"""
         self.running = False
@@ -79,13 +83,16 @@ class MapFrame(Frame):
     def createWidgets(self):
         self.menubar = Menu(self.master)
         fileMenu = Menu(self.menubar, tearoff=0)
+        runMenu = Menu(self.menubar, tearoff=0)
         fileMenu.add_command(label='Export', command=self.dummy)
         fileMenu.add_command(label='Properties', command=self.dummy)
         fileMenu.add_command(label='Save', command=self.dummy)
         fileMenu.add_command(label='Open', command=self.dummy)
         fileMenu.add_command(label='Import', command=self.dummy)
         fileMenu.add_command(label='Close', command=self.stop)
-        self.menubar.add_cascade(label="File", menu=fileMenu)
+        runMenu.add_command(label='Pause', command=self.pause)
+        self.menubar.add_cascade(label='File', menu=fileMenu)
+        self.menubar.add_cascade(label='Run', menu=runMenu)
         self.master.config(menu=self.menubar)
 
         self.Surface = Canvas(self, width=self.canvasWidth, height = self.canvasHeight, bg="#FFFFFF")
@@ -227,23 +234,24 @@ class MapFrame(Frame):
                 
     def drawFrame(self):
         """Main draw method, to be called every frame"""
-        #self.Surface.after(deltaT)
         # randomly generate a goal from time to time
         if rand.random() < goalProb * 20:
             cell = self.cells[rand.randint(0, self.numCols - 1)][rand.randint(0, self.numRows - 1)]
             if cell.type != '0':
                 cell.type = '*'
         self.seedDiffusion()
-        if np.max(self.diffusionAry):
-            self.diffuse(numDiffusions=20)
+        if np.max(self.diffusionAry): # are there any goals?
+            self.manualDiffuse(numDiffusions=50)
         self.drawGrid()
         self.drawBirds()
-        self.Surface.update_idletasks()
-        self.Surface.update()
 
     def mainloop(self):
         self.running = True
+        self.paused = False
         while self.running:
             # draw frame every deltaT ms
             self.Surface.after(deltaT)
-            self.drawFrame()
+            if not self.paused: # don't draw next frame if paused
+                self.drawFrame()
+            self.Surface.update_idletasks()
+            self.Surface.update()
