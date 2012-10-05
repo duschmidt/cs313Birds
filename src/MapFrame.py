@@ -1,4 +1,4 @@
-from Tkinter import Frame, Tk, Menu, Canvas
+from Tkinter import *
 import Tkinter as tkinter
 import numpy as np
 import scipy.signal as sig
@@ -75,6 +75,12 @@ class MapFrame(Frame):
     def pause(self):
         """Pause the main loop"""
         self.paused = not self.paused
+        self.runMenu.entryconfig(1, state=ACTIVE) # enable step
+
+    def step(self, event=None):
+        """Step forward one frame.  Only available when paused"""
+        if self.paused:
+            self.drawFrame()
         
     def stop(self):
         """Stop running the main loop"""
@@ -83,16 +89,18 @@ class MapFrame(Frame):
     def createWidgets(self):
         self.menubar = Menu(self.master)
         fileMenu = Menu(self.menubar, tearoff=0)
-        runMenu = Menu(self.menubar, tearoff=0)
+        self.runMenu = Menu(self.menubar, tearoff=0)
         fileMenu.add_command(label='Export', command=self.dummy)
         fileMenu.add_command(label='Properties', command=self.dummy)
         fileMenu.add_command(label='Save', command=self.dummy)
         fileMenu.add_command(label='Open', command=self.dummy)
         fileMenu.add_command(label='Import', command=self.dummy)
         fileMenu.add_command(label='Close', command=self.stop)
-        runMenu.add_command(label='Pause', command=self.pause)
+        self.runMenu.add_checkbutton(label='Pause', command=self.pause)
+        self.runMenu.add_command(label='Step', command=self.step, state=DISABLED, accelerator="CTRL+S")
+        self.bind_all("<Control-s>", self.step)
         self.menubar.add_cascade(label='File', menu=fileMenu)
-        self.menubar.add_cascade(label='Run', menu=runMenu)
+        self.menubar.add_cascade(label='Run', menu=self.runMenu)
         self.master.config(menu=self.menubar)
 
         self.Surface = Canvas(self, width=self.canvasWidth, height = self.canvasHeight, bg="#FFFFFF")
