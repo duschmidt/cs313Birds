@@ -1,7 +1,7 @@
 from Tkinter import Frame, Tk, Menu, Canvas
 import Tkinter as tkinter
 import numpy as np
-#import scipy.signal as sig
+import scipy.signal as sig
 import random as rand
 from Bird import Bird
 
@@ -164,7 +164,9 @@ class MapFrame(Frame):
         for col in xrange(self.numCols):
             for row in xrange(self.numRows):
                 if rand.random() < goalProb:
-                    self.cells[col][row].type = '*'
+                    cell = self.cells[col][row]
+                    if not cell.type == '0':
+                        cell.type = '*'
 
     def seedDiffusion(self):
         """Set all cells which hold goals to a max diffusion value of 1 and all other cells to 0"""
@@ -184,26 +186,24 @@ class MapFrame(Frame):
         return total
             
     def manualDiffuse(self, numDiffusions):
-        """Works correctly with obstacles, but is very slow"""
+        """Works correctly with obstacles, but is slow"""
         for d in xrange(numDiffusions):
             for col in range(self.numCols):
                 for row in range(self.numRows):
-                    cell = self.cells[col][row]
-                    if cell.type == '1':
-                        self.diffusionAry[col][row] = diffuseAmt * self.sumOfNeighbors(col, row)
+                    if not self.diffusionAry[col][row]:
+                        self.diffusionAry[col][row] = diffuseAmt * self.sumOfNeighbors(col, row) * self.obstacleAry[col][row]
 
     #Adapted from http://stackoverflow.com/questions/8102781/efficiently-doing-diffusion-on-a-2d-map-in-python
     def diffuse(self, numDiffusions):
         for i in xrange(numDiffusions):
             # mode='same' means the output array should be the same size
             # bounary='wrap' means to wrap the convolution around the array dimensions
-            #self.diffusionAry = sig.convolve2d(self.diffusionAry, diffusionKernel, mode='same', boundary='wrap')
-            ary = self.diffusionAry * self.obstacleAry
-            ary += (diffuseAmt*np.roll(self.diffusionAry*self.obstacleAry, 1, 0))
-            ary += (diffuseAmt*np.roll(self.diffusionAry*self.obstacleAry, -1, 0))
-            ary += (diffuseAmt*np.roll(self.diffusionAry*self.obstacleAry, 1, 1))
-            ary += (diffuseAmt*np.roll(self.diffusionAry*self.obstacleAry, -1, 1))
-            self.diffusionAry = ary
+            #self.diffusionAry = sig.convolve2d(self.diffusionAry, diffusionKernel, mode='same', boundary='wrap') * self.obstacleAry
+            ary = self.diffusionAry
+            for i in (-1, 1):
+                for j in (0, 1):                    
+                    ary += (diffuseAmt*np.roll(self.diffusionAry*self.obstacleAry, i, j))
+            self.diffusionAry = ary * self.obstacleAry
         # convolution is unbounded, so scale the array to range [0, 1]
         max = np.max(self.diffusionAry)
         if max > 0:
@@ -234,7 +234,8 @@ class MapFrame(Frame):
             if cell.type != '0':
                 cell.type = '*'
         self.seedDiffusion()
-        self.diffuse(numDiffusions=50)
+        if np.max(self.diffusionAry):
+            self.diffuse(numDiffusions=20)
         self.drawGrid()
         self.drawBirds()
         self.Surface.update_idletasks()
