@@ -1,11 +1,11 @@
 from Tkinter import *
 import Tkinter as tkinter
 import numpy as np
-import scipy.signal as sig
+#import scipy.signal as sig
 import random as rand
 from Bird import Bird
 
-numBirds = 8 # number of birds in the map
+numBirds = 4 # number of birds in the map
 goalProb = 0.005 # the probability that new food will appear
 deltaT = 0 # time per frame in ms
 diffuseAmt = 0.2 # diffusion constant - lower == less diffusion
@@ -13,6 +13,10 @@ diffuseAmt = 0.2 # diffusion constant - lower == less diffusion
 diffusionKernel = np.array([[diffuseAmt, diffuseAmt,  diffuseAmt],
                             [diffuseAmt, 1,           diffuseAmt],
                             [diffuseAmt, diffuseAmt,  diffuseAmt]])
+maxDiff = 1.0
+minDiff = 0.0
+diffRatio = lambda diff: (diff - minDiff) / float(maxDiff - minDiff)
+diffCnt = 10
 
 class Cell:
     col = 0
@@ -40,7 +44,7 @@ class Cell:
             return "#FF0000" # food - red
         else:
             # blank cell - return color based on diffusion value
-            return "#%02XFFFF" % int(abs(255 * (1 - diffusionValue)))
+            return "#%02XFFFF" % int(abs(255 * (1 - diffRatio(diffusionValue))))
             
 
     def updateColor(self, Surface, diffusionValue):
@@ -136,6 +140,7 @@ class MapFrame(Frame):
         # load character encoding from the given map file
         mapEncoding = np.loadtxt(mapFileName, dtype='c')
         self.obstacleAry = mapEncoding.astype('float')
+        self.antiObs = None
         # store number of rows/ cols of cells in grid
         self.numCols = mapEncoding.shape[0]
         self.numRows = mapEncoding.shape[1]
@@ -228,12 +233,11 @@ class MapFrame(Frame):
             ary = self.diffusionAry
             for i in (-1, 1):
                 for j in (0, 1):                    
-                    ary += (diffuseAmt*np.roll(self.diffusionAry*self.obstacleAry, i, j))
+                    ary += diffuseAmt*np.roll(self.diffusionAry, i, j)
             self.diffusionAry = ary * self.obstacleAry
         # convolution is unbounded, so scale the array to range [0, 1]
-        max = np.max(self.diffusionAry)
-        if max > 0:
-            self.diffusionAry /= max
+        maxDiff = np.max(self.diffusionAry)
+        minDiff = np.min(self.diffusionAry)
                             
     def drawGrid(self):
             """Fills all the cells in the grid with an appropriate color"""
@@ -254,19 +258,21 @@ class MapFrame(Frame):
     def drawFrame(self):
         """Main draw method, to be called every frame"""
         # randomly generate a goal from time to time
+        global diffCnt
         if rand.random() < goalProb * 20:
             cell = self.cells[rand.randint(0, self.numCols - 1)][rand.randint(0, self.numRows - 1)]
             if cell.type != '0':
                 cell.type = '*'
         self.seedDiffusion()
         if np.max(self.diffusionAry): # are there any goals?
-            self.diffuse(numDiffusions=50)
+            self.diffuse(numDiffusions=(diffCnt))
         self.drawGrid()
         self.drawBirds()
 
     def mainloop(self):
         self.running = True
         self.paused = False
+        global deltaT
         while self.running:
             # draw frame every deltaT ms
             self.Surface.after(deltaT)
