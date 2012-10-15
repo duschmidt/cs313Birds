@@ -63,11 +63,16 @@ class MapFrame(Frame):
         
         self.createWidgets()
         self.pack()
+
+        #The loadMap and initGoals can be performed in the Map object constructor
         self.loadMap(mapFileName)
         self.initGoals()
+
+
         for i in range(numBirds):
             self.birds.append(Bird(self))
-                
+    
+
     def createWidgets(self):
         def dummy():
             """ Dummy function for menu items"""
@@ -124,7 +129,8 @@ class MapFrame(Frame):
         self.Surface.bind("<Button-1>", leftClick)
         self.Surface.bind("<Button-3>", beginRightClick)
         self.Surface.bind("<ButtonRelease-3>", endRightClick)
-        
+    
+    #Frame method that acts on Map object    
     def initCells(self, mapEncoding):
         for col in xrange(self.numCols):
             self.cells.append([])
@@ -132,6 +138,7 @@ class MapFrame(Frame):
                 self.cells[col].append(Cell(self.Surface, col, row, mapEncoding[col, row]))
 
 
+    #Map Method, cell access can be pushed into initCells
     def loadMap(self, mapFileName):
         # load character encoding from the given map file
         mapEncoding = np.loadtxt(mapFileName, dtype='c')
@@ -146,6 +153,7 @@ class MapFrame(Frame):
         self.diffusionAry = np.zeros((self.numCols, self.numRows))
         self.initCells(mapEncoding)
 
+    #Frame Method? Might be AgentGroup?  Seems to be somewhere in between
     def occupied(self, cell):
         """Returns true if a bird is occupying the cell at x, y.  Returns false otherwise"""
         for bird in self.birds:
@@ -153,6 +161,7 @@ class MapFrame(Frame):
                 return True
         return False
 
+    #Map Method, maybe a frame method?
     def cellInDirection(self, cell, direction):
         col = cell.col
         row = cell.row
@@ -171,6 +180,7 @@ class MapFrame(Frame):
 
         return self.cells[col][row]
 
+    #Map Method, may need modification
     def valueInDirection(self, cell, direction):
         cell = self.cellInDirection(cell, direction)
         if self.occupied(cell) or cell.type == '0':
@@ -180,10 +190,13 @@ class MapFrame(Frame):
         else:
             return self.diffusionAry[cell.col, cell.row]
 
+    
+    #Map Method
     def pointToCell(self, x, y):
         """Convert a pixel x, y point to a cell row, col pair"""
         return self.cells[(int)(x / Cell.width)][(int)(y / Cell.height)]
-            
+    
+    #Map Method
     def initGoals(self):
         """Populate the map randomly with goals"""
         for col in xrange(self.numCols):
@@ -193,6 +206,7 @@ class MapFrame(Frame):
                     if not cell.type == '0':
                         cell.type = '*'
 
+    #Map Method
     def seedDiffusion(self):
         """Set all cells which hold goals to a max diffusion value of 1 and all other cells to 0"""
         self.diffusionAry.fill(0)
@@ -202,6 +216,7 @@ class MapFrame(Frame):
                 if cell.type == '*':
                     self.diffusionAry[cell.col, cell.row] = 1
 
+    #Map Method
     def sumOfNeighbors(self, col, row):
         total = 0
         total += self.diffusionAry[col][(row - 1) % self.numRows]
@@ -209,7 +224,8 @@ class MapFrame(Frame):
         total += self.diffusionAry[(col + 1) % self.numCols][row]
         total += self.diffusionAry[(col - 1) % self.numCols][row]
         return total
-            
+    
+    #Map Method
     def manualDiffuse(self, numDiffusions):
         """Works correctly with obstacles, but is slow"""
         for d in xrange(numDiffusions):
@@ -219,6 +235,7 @@ class MapFrame(Frame):
                     if not self.diffusionAry[col][row] == 1:
                         self.diffusionAry[col][row] = diffuseAmt * self.sumOfNeighbors(col, row) * self.obstacleAry[col][row]
 
+    #Map Method
     #Adapted from http://stackoverflow.com/questions/8102781/efficiently-doing-diffusion-on-a-2d-map-in-python
     def diffuse(self, numDiffusions):
         for i in xrange(numDiffusions):
@@ -234,7 +251,8 @@ class MapFrame(Frame):
         max = np.max(self.diffusionAry)
         if max > 0:
             self.diffusionAry /= max
-                            
+    
+    #Frame method that acts on Map object             
     def drawGrid(self):
             """Fills all the cells in the grid with an appropriate color"""
             for cellList in self.cells:
@@ -246,11 +264,13 @@ class MapFrame(Frame):
                         scaled = 0
                     cell.updateColor(self.Surface, scaled)
 
+    #Frame method that acts on AgentGroup
     def drawBirds(self):
         for bird in self.birds:
             bird.move()
             self.Surface.itemconfig(bird.cell.rect, fill="#00FF00")
-                
+
+    #Frame Method           
     def drawFrame(self):
         """Main draw method, to be called every frame"""
         # randomly generate a goal from time to time
@@ -264,6 +284,7 @@ class MapFrame(Frame):
         self.drawGrid()
         self.drawBirds()
 
+    #Frame Method
     def mainloop(self):
         self.running = True
         self.paused = False
