@@ -1,0 +1,52 @@
+
+
+Frame:
+	Attributes:
+		GameState
+
+
+	Methods:
+		drawSprite(Sprite)
+
+
+
+GameState:
+	Attributes:
+		
+		#the following lists are parallel
+		
+		Group[] spriteGroups #List of sprite groups
+		numpy.ndArray[] environmentMetrics #list of numpy arrays
+		float[] diffusionRates #list of diffusion rates
+		
+		#end parallel lists
+
+		Group updateSprites #is a sprite group containing all sprites who were updated
+
+	Methods:
+		update(diffusionIterations) #diffuses environment Metrics using diffusionRates
+				 					#calls update on all sprite groups
+		getUpdatedSprites() #returns a list of all sprites which changed as result of last update
+
+
+
+
+Sprite:
+	Attributes:
+		position[] #list of 2 or 3 float values indicating position
+		spriteID #some identifier, like Tkinter rectangle id
+		environmentMetrics[] #
+
+	Methods:
+		update(neighborhood)
+
+
+Group:
+	Attributes:
+
+	Methods:
+		update() #updates all member sprites
+
+
+
+
