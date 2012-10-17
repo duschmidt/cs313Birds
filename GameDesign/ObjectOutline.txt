@@ -1,27 +1,36 @@
-
+Questions:
+	How do environment metric cells get updated graphically?
+		Should they be treated as sprites or something different?
 
 Frame:
-	Attributes:
-		GameState
+	The purpose of this class is to render the graphic elements of our game
 
+	Attributes:
+		GameState gameState
 
 	Methods:
-		drawSprite(Sprite)
 
+		updateSprites(Group updatedSprites) #draws each sprite in the group and removes the sprite from the group
+		drawSprite(Sprite s) #draws some sprite
+		drawMetricLayer(numpy.ndArray environmentMetricLayer )
 
 
 GameState:
+	The purpose of this class is to keep track of the game state.
+
 	Attributes:
 		
 		#the following lists are parallel
 		
-		Group[] spriteGroups #List of sprite groups
-		numpy.ndArray[] environmentMetrics #list of numpy arrays
+		Group[] spriteGroups #List of sprite groups for entities
+
+		numpy.ndArray[] environmentMetricLayers #list of numpy arrays
+
 		float[] diffusionRates #list of diffusion rates
 		
 		#end parallel lists
 
-		Group updateSprites #is a sprite group containing all sprites who were updated
+		Group updatedSprites #is a sprite group containing all sprites who were updated
 
 	Methods:
 		update(diffusionIterations) #diffuses environment Metrics using diffusionRates
@@ -32,16 +41,20 @@ GameState:
 
 
 Sprite:
+	This is a base class for our game entities.
+
 	Attributes:
-		position[] #list of 2 or 3 float values indicating position
-		spriteID #some identifier, like Tkinter rectangle id
-		environmentMetrics[] #
+		float[] position #list/tuple of 2 or 3 float values indicating position
+		int spriteID #some identifier, like Tkinter rectangle id
+		numpy.ndArray[] environmentMetrics #List of numpy arrays
 
 	Methods:
-		update(neighborhood)
+		abstract update(neighborhood)
 
 
 Group:
+	This class is a container of sprites.  It is just an efficient way to group sprites together
+
 	Attributes:
 
 	Methods:
