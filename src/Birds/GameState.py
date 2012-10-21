@@ -3,8 +3,8 @@ from Entity import Entity
 
 class GameState():
 	"""This is the top level class responsible for managing game state"""
-	entityGroups={}			#dictionary of entity groups keyed by group name
-	obstacleArray = None	#A numpy array for storing diffusion obstacles
+	entityGroups={}			#:dictionary of entity groups keyed by group name
+	obstacleArray = None	#:A numpy array for storing diffusion obstacles
 
 	def __init__(self):
 		"""Constructs a new GameState object"""

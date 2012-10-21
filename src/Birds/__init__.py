@@ -1,1 +1,1 @@
-#file required to mark folder as python module, simplifies documentation
+"""This package contains the most awesome game ever invented"""

@@ -3,11 +3,11 @@ from pygame.sprite import Group
 class EntityGroup(Group):
 	"""This class manages a group of entities and their diffused environment metrics"""
 
-	groupName = None		#A name for this group
-	gameState = None		#A reference to the master gameState object
-	updatedEntities = None	#A group that will contain updated entities
-	diffusionRates = {}		#dictionary of diffusion rates keyed by metric name
-	metricArrays = {}		#dictionary of environment metric arrays keyed by metric name
+	groupName = None		#:A name for this group
+	gameState = None		#:A reference to the master gameState object
+	updatedEntities = None	#:A group that will contain updated entities
+	diffusionRates = {}		#:dictionary of diffusion rates keyed by metric name
+	metricArrays = {}		#:dictionary of environment metric arrays keyed by metric name
 
 	def __init__(self, gameState, diffRate, groupName):
 		Group.__init__(self)			#initialize base class

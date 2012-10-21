@@ -1,0 +1,13 @@
+\begin{theindex}
+
+  \item Birds \textit{(package)}, \hyperpage{2}
+    \subitem Birds.Entity \textit{(module)}, \hyperpage{3}
+      \subsubitem Birds.Entity.Entity \textit{(class)}, \hyperpage{3}
+    \subitem Birds.EntityGroup \textit{(module)}, \hyperpage{4}
+      \subsubitem Birds.EntityGroup.EntityGroup \textit{(class)}, 
+		\hyperpage{4}
+    \subitem Birds.GameState \textit{(module)}, \hyperpage{5--6}
+      \subsubitem Birds.GameState.GameState \textit{(class)}, 
+		\hyperpage{5--6}
+
+\end{theindex}
