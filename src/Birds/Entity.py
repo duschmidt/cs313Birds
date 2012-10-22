@@ -17,4 +17,3 @@ class Entity(Sprite):
 		   Updates entity state through interactions with gameState object"""
 		raise Exception("Method must be overridden")
 
-

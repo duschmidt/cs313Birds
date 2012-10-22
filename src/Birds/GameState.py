@@ -48,35 +48,34 @@ class GameState():
 
 	def update(self):
 		"""Applies diffusion to all environment metrics.  Also calls update on all entity groups"""
-		pass
+		for entityGroup in entityGroups.itervalues():
+                    entityGroup.update()
 
 	def getAllUpdatedEntities(self):
 		"""Returns a list of Entity objects whose states were updated as a result of the last call to update."""
-		pass
+		pass #TODO: waiting on EntityGroup.getUpdatedEntities
 
 	def positionToDiscrete(self, position):
 		"""Convert a continuous position given by position into discrete cells"""
-		pass
-
-	def addEntityGroup(self, groupName, diffusionRate):
-		"""Create a new entity group with the given group name and diffusion rate"""
-		pass
-
-	def removeEntityGroup(self, groupName):
-		"""Remove the entity group with the given name"""
-		pass
+		pass #TODO: waiting on Frame, for width and height info
 
 	def addEntity(self, entity, groupName):
 		"""Add the given entity to the group given by groupName"""
-		pass
+		self.entityGroups[groupName].addEntity(entity)
 
 	def removeEntity(self, entity, groupName):
 		"""Remove the givent entity from the group given by groupName"""
-		pass
+		self.entityGroups[groupName].removeEntity(entity)
 
 	def getEntitiesAtPosition(self, position):
 		"""Returns a list of Entity objects who are occupying the discrete cell which contains
 		the given position."""
-		pass
-
+		discretePosition = self.positionToDiscrete(position)
+                entitiesAtPosition = [] # list to hold all entities at the given position
+                for entityGroup in self.entityGroups.itervalues():
+                    for entity in entityGroup.entities:
+                        if self.positionToDiscrete(entity.position) == discretePosition:
+                            entitiesAtPosition.append(entity)
+                                                        
+                return entitiesAtPosition
 
