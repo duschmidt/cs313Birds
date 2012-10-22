@@ -11,15 +11,15 @@ class GameState():
 
         class Metric:
                 """Class to hold name, rate and numpy array for a diffusion metric"""
-                def __init__(self, gameState, name, rate, numDiffusions):
+                def __init__(self, gameState, name, rate, diffusionIterations):
                         self.gameState = gameState
                         self.name = name
                         self.rate = rate
-                        self.numDiffusions = numDiffusions
+                        self.diffusionIterations = diffusionIterations
                         self.array = np.zeros((gameState.numCols, gameState.numRows))
 
                 def diffuse(self):
-                    for n in xrange(self.numDiffusions):
+                    for n in xrange(self.diffusionIterations):
                         # mode='same' means the output array should be the same size
                         # bounary='wrap' means to wrap the convolution around the array dimensions
                         # self.diffusionAry = sig.convolve2d(self.diffusionAry, diffusionKernel, mode='same', boundary='wrap')

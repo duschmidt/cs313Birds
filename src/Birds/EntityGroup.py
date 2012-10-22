@@ -3,12 +3,11 @@ from GameState import Metric
 
 class EntityGroup(Group):
 	"""This class manages a group of entities and their diffused environment metrics"""
-                
+
 	groupName = None		#:A name for this group
 	gameState = None		#:A reference to the master gameState object
         updatedEntities = None          #:A group that will contain updated entities
-	metrics = {}		        #:dictionary of environment metrics (holding metric names, arrays and rates),
-                                        # keyed by metric name
+	metrics = {}		        #:dictionary of environment metrics, keyed by metric name
 
 	def __init__(self, gameState, groupName, metrics):
 		Group.__init__(self)			#initialize base class
@@ -17,6 +16,7 @@ class EntityGroup(Group):
 		self.updatedEntities = Group()
                 for metric in metrics:
                         self.metrics[metric.name] = metric
+                        metric.diffuse() #diffuse once during initialization
 
 	def update(self):
 		"""Updates member entities then applies diffusion to metric arrays"""
