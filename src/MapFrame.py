@@ -1,7 +1,7 @@
 from Tkinter import *
 import Tkinter as tkinter
 import numpy as np
-import scipy.signal as sig
+#import scipy.signal as sig
 import random as rand
 from Bird import Bird
 
