@@ -1,0 +1,11 @@
+Birds requires the following libraries:
+    *Pygame
+    *numpy
+    *scipy
+
+To install these libraries, use:
+
+➜ sudo apt-get install python-pip 
+➜ sudo apt-get install libatlas-base-dev gfortran
+➜ sudo pip install scipy
+➜ sudo apt-get install python-pygame
