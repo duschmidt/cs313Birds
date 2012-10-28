@@ -22,7 +22,7 @@ class Cell:
         self.col = col
         self.row = row
         self.x = col * self.width
-        self.y = (row + 1) * self.height
+        self.y = row * self.height
         
     def __eq__(self, other):
         return self.col == other.col and self.row == other.row
@@ -40,8 +40,8 @@ class Frame:
     def __init__(self, pixelDims, discreteDims):
         self.width, self.height = pixelDims
         self.numCols, self.numRows = discreteDims
-        Cell.width  = self.width / float(self.numCols)
-        Cell.height = self.height / float(self.numRows)
+        Cell.width  = self.width / self.numCols
+        Cell.height = self.height / self.numRows
         
         self.grid = []
         for col in range(self.numCols):
@@ -71,7 +71,7 @@ class Frame:
             for row in range(self.numRows):
                 self.grid[col][row].draw(self.screen)
         
-    def draw(self):
+    def draw(self, spriteGroups):
         """Draw one frame"""
         # Get our event. Prosessing one at a time because of the nature of our game,
         # we don't need to consider the possibility of simultanious input.
@@ -86,5 +86,8 @@ class Frame:
             # TODO : do something with click at col, row
 
         self.drawEnvironment()
+        for group in spriteGroups:
+            group.draw(self.screen)
+            
         pygame.display.update()
             

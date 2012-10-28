@@ -1,7 +1,10 @@
 import numpy as np
+from random import randint
+
 from EntityGroup import EntityGroup
 from Entity import Entity
 from Metric import Metric
+from Frame import Cell
 
 class GameState():
 	"""This is the top level class responsible for managing game state"""
@@ -20,15 +23,23 @@ class GameState():
         def getDimensions(self):
             return Metric.obstacleAry.shape[0], Metric.obstacleAry.shape[1]
 
+        def randomPosition(self):
+            return (randint(0, Metric.obstacleAry.shape[0])*Cell.width,
+                    randint(0, Metric.obstacleAry.shape[1])*Cell.height)
+            
 	def update(self):
 		"""Applies diffusion to all environment metrics.  Also calls update on all entity groups"""
-		for entityGroup in entityGroups.itervalues():
+		for entityGroup in self.entityGroups.itervalues():
                     entityGroup.update()
 
 	def getAllUpdatedEntities(self):
 		"""Returns a list of Entity objects whose states were updated as a result of the last call to update."""
 		pass #TODO: waiting on EntityGroup.getUpdatedEntities
 
+        def getGroups(self):
+            """Returns a view into all entity groups"""
+            return self.entityGroups.itervalues()
+            
 	def positionToDiscrete(self, position):
 		"""Convert a continuous position given by position into discrete cells"""
 		pass #TODO: waiting on Frame, for width and height info

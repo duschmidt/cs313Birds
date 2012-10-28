@@ -1,38 +1,34 @@
 from pygame.sprite import Group
+
 from Metric import Metric
+from Food import Food
 
 class EntityGroup(Group):
-	"""This class manages a group of entities and their diffused environment metrics"""
+    """This class manages a group of entities and their diffused environment metrics"""
 
-	groupName = None		#:A name for this group
-        updatedEntities = None          #:A group that will contain updated entities
-	metrics = {}		        #:dictionary of environment metrics, keyed by metric name
+    gameState = None            #:Reference to global game state
+    groupName = None		#:A name for this group
+    updatedEntities = None      #:A group that will contain updated entities
+    metrics = {}	        #:dictionary of environment metrics, keyed by metric name
 
-	def __init__(self, gameState, groupName, metrics):
-		Group.__init__(self)			#initialize base class
-		self.groupName = groupName
-		self.updatedEntities = Group()
-                for metric in metrics:
-                        self.metrics[metric.name] = metric
-                        metric.diffuse() #diffuse once during initialization
+    def __init__(self, gameState, groupName, metrics):
+        Group.__init__(self)			#initialize base class
+        self.gameState = gameState
+        self.groupName = groupName
+        for metric in metrics:
+            self.metrics[metric.name] = metric
+            metric.diffuse() #diffuse once during initialization
 
-	def update(self):
-		"""Updates member entities then applies diffusion to metric arrays"""
-		Group(self).update() #call the update method for the base Group class
-		#Diffuse metric arrays
-                for metric in self.metrics:
-                    metric.diffuse()
+    def update(self):
+        """Updates member entities then applies diffusion to metric arrays"""
+        Group.update(self) #the base update method calls update on all sprites in the group
+        if self.groupName == "Food": # lazy way of doing this - should we have separate group classes?
+            self.add(Food(self.gameState, 0, self.gameState.randomPosition()))
+                                   
+        #Diffuse metric arrays
+        for metric in self.metrics.itervalues():
+            metric.diffuse()
 
-	def getUpdatedEntities(self):
-		pass # TODO
-
-	def addEntity(self, entity):
-		Group(self).add(entity) #call the base class add method
-
-	def removeEntity(self, entity):
-		"""Remove the given entity from this group"""
-		Group(self).remove(entity) #call the base class remove method
-
-	def getMetricNames(self):
-		"""Returns a list of names for metrics maintained by this group"""
-		return self.metrics.keys()
+    def getMetricNames(self):
+        """Returns a list of names for metrics maintained by this group"""
+        return self.metrics.keys()

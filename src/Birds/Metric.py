@@ -26,3 +26,4 @@ class Metric:
             max = np.max(self.array)
             if max > 0:
                 self.array /= max
+                
