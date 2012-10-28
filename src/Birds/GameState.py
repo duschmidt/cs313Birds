@@ -22,10 +22,16 @@ class GameState():
 
         def getDimensions(self):
             return Metric.obstacleAry.shape[0], Metric.obstacleAry.shape[1]
-
+                
         def randomPosition(self):
-            return (randint(0, Metric.obstacleAry.shape[0])*Cell.width,
-                    randint(0, Metric.obstacleAry.shape[1])*Cell.height)
+            while True:
+                discretePos = (randint(0, Metric.obstacleAry.shape[0] - 1),
+                           randint(0, Metric.obstacleAry.shape[1] - 1))
+                pos = (discretePos[0]*Cell.width, discretePos[1]*Cell.height)
+                if not self.occupied(pos) and Metric.obstacleAry[discretePos]:
+                    break
+                    
+            return pos[0], pos[1]
             
 	def update(self):
 		"""Applies diffusion to all environment metrics.  Also calls update on all entity groups"""
@@ -33,34 +39,45 @@ class GameState():
                     entityGroup.update()
 
 	def getAllUpdatedEntities(self):
-		"""Returns a list of Entity objects whose states were updated as a result of the last call to update."""
-		pass #TODO: waiting on EntityGroup.getUpdatedEntities
+            """Returns a list of Entity objects whose states were updated as a result of the last call to update."""
+            pass #TODO: waiting on EntityGroup.getUpdatedEntities
 
         def getGroups(self):
             """Returns a view into all entity groups"""
             return self.entityGroups.itervalues()
             
 	def positionToDiscrete(self, position):
-		"""Convert a continuous position given by position into discrete cells"""
-		pass #TODO: waiting on Frame, for width and height info
+            """Convert a continuous position given by position into discrete cells"""
+            return (position[0] / Cell.width, position[1] / Cell.height)
 
 	def addEntity(self, entity, groupName):
-		"""Add the given entity to the group given by groupName"""
-		self.entityGroups[groupName].addEntity(entity)
+            """Add the given entity to the group given by groupName"""
+            self.entityGroups[groupName].addEntity(entity)
 
 	def removeEntity(self, entity, groupName):
-		"""Remove the givent entity from the group given by groupName"""
-		self.entityGroups[groupName].removeEntity(entity)
+            """Remove the givent entity from the group given by groupName"""
+            self.entityGroups[groupName].removeEntity(entity)
+
+        def occupied(self, pos):
+            """If any entity object is occupying the discrete cell which contains the given position,
+            return True, else return False"""
+            discretePosition = self.positionToDiscrete(pos)
+            for entityGroup in self.entityGroups.itervalues():
+                for entity in entityGroup.sprites():
+                    if self.positionToDiscrete(entity.position) == discretePosition:
+                        return True
+
+            return False
 
 	def getEntitiesAtPosition(self, position):
-		"""Returns a list of Entity objects who are occupying the discrete cell which contains
-		the given position."""
-		discretePosition = self.positionToDiscrete(position)
-                entitiesAtPosition = [] # list to hold all entities at the given position
-                for entityGroup in self.entityGroups.itervalues():
-                    for entity in entityGroup.entities:
-                        if self.positionToDiscrete(entity.position) == discretePosition:
-                            entitiesAtPosition.append(entity)
+            """Returns a list of Entity objects who are occupying the discrete cell which contains
+            the given position."""
+            entitiesAtPosition = [] # list to hold all entities at the given position
+            discretePosition = self.positionToDiscrete(position)
+            for entityGroup in self.entityGroups.itervalues():
+                for entity in entityGroup.sprites():
+                    if self.positionToDiscrete(entity.position) == discretePosition:
+                        entitiesAtPosition.append(entity)
                                                         
-                return entitiesAtPosition
+            return entitiesAtPosition
 

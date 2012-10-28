@@ -8,7 +8,6 @@ class EntityGroup(Group):
 
     gameState = None            #:Reference to global game state
     groupName = None		#:A name for this group
-    updatedEntities = None      #:A group that will contain updated entities
     metrics = {}	        #:dictionary of environment metrics, keyed by metric name
 
     def __init__(self, gameState, groupName, metrics):
@@ -22,6 +21,7 @@ class EntityGroup(Group):
     def update(self):
         """Updates member entities then applies diffusion to metric arrays"""
         Group.update(self) #the base update method calls update on all sprites in the group
+        
         if self.groupName == "Food": # lazy way of doing this - should we have separate group classes?
             self.add(Food(self.gameState, 0, self.gameState.randomPosition()))
                                    

@@ -35,6 +35,7 @@ class Entity(Sprite):
 		Sprite.__init__(self)		#initialize base class
 		self.gameState = gameState
 		self.entityId = entityId
+                self.position = position
 
 	def update(self):
 		"""Abstract method to be overridden by inherited classes.
