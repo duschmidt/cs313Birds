@@ -10,6 +10,10 @@ class Metric:
         self.diffusionIterations = diffusionIterations
         self.array = np.zeros((self.obstacleAry.shape[0], self.obstacleAry.shape[1]))
 
+    def clear(self):
+        """Set all diffusion array elements to zero"""
+        self.array.fill(0)
+        
     def diffuse(self):
         for n in xrange(self.diffusionIterations):
             # mode='same' means the output array should be the same size

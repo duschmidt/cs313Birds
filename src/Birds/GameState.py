@@ -20,6 +20,9 @@ class GameState():
                                                                        Metric("repulse", -0.1, 30)])
                 self.entityGroups["Food"] = EntityGroup(self, "Food", [Metric("attract",  0.5, 30)])
 
+        def initBirds(self):
+            self.entityGroups["Bird"].initBirds()
+            
         def getDimensions(self):
             return Metric.obstacleAry.shape[0], Metric.obstacleAry.shape[1]
                 
@@ -31,7 +34,7 @@ class GameState():
                 if not self.occupied(pos) and Metric.obstacleAry[discretePos]:
                     break
                     
-            return pos[0], pos[1]
+            return pos
             
 	def update(self):
 		"""Applies diffusion to all environment metrics.  Also calls update on all entity groups"""

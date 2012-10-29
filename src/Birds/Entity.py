@@ -4,12 +4,18 @@ from pygame.rect import Rect
 
 import os
 
+images = {}
+
 def load_image(name, position, dims, colorkey=None):
     """Load an image located in the data directory.
         Returns an image, rect pair which Sprite uses in its draw() function.
         posidion and dims should be a tuple of the form (width, height) 
         An optional colorkey argument represents a color of the image that is transparent.
         Code adapted from http://www.pygame.org/docs/tut/chimp/ChimpLineByLine.html"""
+    
+    if name in images: # if the image has already been loaded, don't waste the time loading it again
+        return images[name], Rect(position, dims)
+        
     fullname = os.path.join('../../data', name)
     try:
         image = pygame.image.load(fullname)
@@ -22,19 +28,20 @@ def load_image(name, position, dims, colorkey=None):
             colorkey = image.get_at((0, 0))
         emage.set_colorkey(colorkey, RLEACCEL)
     #return image, image.get_rect()
-    return pygame.transform.smoothscale(image, dims), Rect(position, dims)
+    images[name] = pygame.transform.smoothscale(image, dims)
+    return images[name], Rect(position, dims)
 
 class Entity(Sprite):
 	"""This is a base class for game entities"""
 	gameState = None	#:reference to master game state object
 	position = []		#:tuple to track position of this entity
-	entityId = 0		#:some meaningful identifier for this entity
+	id =    0		#:some meaningful identifier for this entity
 
-	def __init__(self, gameState, entityId, position):
+	def __init__(self, gameState, id, position):
 		"""Constructs a new entity object at the given position"""
 		Sprite.__init__(self)		#initialize base class
+                self.id = id
 		self.gameState = gameState
-		self.entityId = entityId
                 self.position = position
 
 	def update(self):
