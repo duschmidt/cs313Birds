@@ -2,6 +2,8 @@ import pygame
 from pygame.sprite import Sprite
 from pygame.rect import Rect
 
+from Frame import Cell
+
 import os
 
 images = {}
@@ -34,7 +36,6 @@ def load_image(name, position, dims, colorkey=None):
 class Entity(Sprite):
 	"""This is a base class for game entities"""
 	gameState = None	#:reference to master game state object
-	position = []		#:tuple to track position of this entity
 	id =    0		#:some meaningful identifier for this entity
 
 	def __init__(self, gameState, id, position):
@@ -42,10 +43,26 @@ class Entity(Sprite):
 		Sprite.__init__(self)		#initialize base class
                 self.id = id
 		self.gameState = gameState
-                self.position = position
 
+                
 	def update(self):
 		"""Abstract method to be overridden by inherited classes.
 		   Updates entity state through interactions with gameState object"""
 		raise Exception("Method must be overridden")
 
+        def position(self):
+            return self.rect.topleft
+
+        def positionInDirection(self, direction):
+            currPos = self.rect.topleft
+            dimensions = self.gameState.getDimensions()
+            
+            if direction == 'N':
+                return (currPos[0], (currPos[1] - Cell.height) % dimensions[1])
+            elif direction == 'S':
+                return (currPos[0], (currPos[1] + Cell.height) % dimensions[1])
+            elif direction == 'E':
+                return ((currPos[0] + Cell.width) % dimensions[0], currPos[1])
+            elif direction == 'W':
+                return ((currPos[0] - Cell.width) % dimensions[0], currPos[1])
+                

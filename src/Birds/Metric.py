@@ -2,7 +2,7 @@ import numpy as np
 
 class Metric:
     obstacleAry = None # instantiated as a static field in GameState
-
+    
     """Class to hold name, rate and numpy array for a diffusion metric"""
     def __init__(self, name, rate, diffusionIterations):
         self.name = name
@@ -31,3 +31,36 @@ class Metric:
             if max > 0:
                 self.array /= max
                 
+    #Map Method, maybe a frame method?
+    def positionInDirection(self, pos, direction):
+        col, row = pos
+        if direction == 'N':
+            row -= 1
+        elif direction == 'S':
+            row += 1
+        elif direction == 'E':
+            col += 1
+        else:
+            col -= 1
+
+        # wrap around grid boundaries
+        col %= self.array.shape[0]
+        row %= self.array.shape[1]
+
+        return (col, row)
+
+    def valueInDirection(self, position, direction):
+        neighborPos = self.positionInDirection(position, direction)
+        if not self.obstacleAry[position]:
+            return -1
+            
+        return self.array[neighborPos]
+
+    def getRankedDirections(self, position):
+        neighborValues = {}
+        # find the diffusion values neighboring the bird
+        for direction in ('N', 'S', 'E', 'W'):
+            neighborValues[direction] = self.array[self.positionInDirection(position, direction)]
+        # find direction with the max diffusion value
+        return reversed(sorted(neighborValues, key=neighborValues.get))
+

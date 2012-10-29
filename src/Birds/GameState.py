@@ -23,15 +23,19 @@ class GameState():
         def initBirds(self):
             self.entityGroups["Bird"].initBirds()
             
-        def getDimensions(self):
+        def getDiscreteDimensions(self):
             return Metric.obstacleAry.shape[0], Metric.obstacleAry.shape[1]
-                
+
+        def getDimensions(self):
+            discreteDimensions = self.getDiscreteDimensions()
+            return discreteDimensions[0] * Cell.width, discreteDimensions[1] * Cell.height
+            
         def randomPosition(self):
             while True:
                 discretePos = (randint(0, Metric.obstacleAry.shape[0] - 1),
                            randint(0, Metric.obstacleAry.shape[1] - 1))
                 pos = (discretePos[0]*Cell.width, discretePos[1]*Cell.height)
-                if not self.occupied(pos) and Metric.obstacleAry[discretePos]:
+                if not (self.isFoodAtPosition(pos) or self.isObstacleAtPosition(pos)):
                     break
                     
             return pos
@@ -52,26 +56,41 @@ class GameState():
 	def positionToDiscrete(self, position):
             """Convert a continuous position given by position into discrete cells"""
             return (position[0] / Cell.width, position[1] / Cell.height)
-
+            
 	def addEntity(self, entity, groupName):
             """Add the given entity to the group given by groupName"""
             self.entityGroups[groupName].addEntity(entity)
 
 	def removeEntity(self, entity, groupName):
             """Remove the givent entity from the group given by groupName"""
-            self.entityGroups[groupName].removeEntity(entity)
+            self.entityGroups[groupName].remove(entity)
 
-        def occupied(self, pos):
-            """If any entity object is occupying the discrete cell which contains the given position,
-            return True, else return False"""
-            discretePosition = self.positionToDiscrete(pos)
-            for entityGroup in self.entityGroups.itervalues():
-                for entity in entityGroup.sprites():
-                    if self.positionToDiscrete(entity.position) == discretePosition:
-                        return True
-
+        def isEntityAtPosition(self, groupName, position):
+            """If any entity object of the given group type is occupying the discrete cell
+            which contains the given position, return True, else return False"""
+            discretePosition = self.positionToDiscrete(position)
+            for entity in self.entityGroups[groupName].sprites():
+                if self.positionToDiscrete(entity.position()) == discretePosition:
+                    return True
+                    
             return False
+            
+        def isBirdAtPosition(self, position):
+            """If any bird is occupying the discrete cell
+            which contains the given position, return True, else return False"""
+            return self.isEntityAtPosition("Bird", position)
 
+        def isFoodAtPosition(self, position):
+            """If a food item is occupying the discrete cell
+            which contains the given position, return True, else return False"""
+            return self.isEntityAtPosition("Food", position)
+
+        def isObstacleAtPosition(self, position):
+            """If an obstacle is occupying the discrete cell
+            which contains the given position, return True, else return False"""
+            discretePosition = self.positionToDiscrete(position)
+            return not Metric.obstacleAry[discretePosition]
+            
 	def getEntitiesAtPosition(self, position):
             """Returns a list of Entity objects who are occupying the discrete cell which contains
             the given position."""
@@ -79,7 +98,7 @@ class GameState():
             discretePosition = self.positionToDiscrete(position)
             for entityGroup in self.entityGroups.itervalues():
                 for entity in entityGroup.sprites():
-                    if self.positionToDiscrete(entity.position) == discretePosition:
+                    if self.positionToDiscrete(entity.position()) == discretePosition:
                         entitiesAtPosition.append(entity)
                                                         
             return entitiesAtPosition
