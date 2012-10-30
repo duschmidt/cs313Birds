@@ -22,7 +22,7 @@ class EntityGroup(Group):
             
     def initBirds(self):
         """Place random birds throughout the map"""
-        for i in range(8):
+        for i in range(20):
             self.add(Bird(self.gameState, 1, self.gameState.randomPosition()))
             
     def update(self):
@@ -36,15 +36,15 @@ class EntityGroup(Group):
         if self.groupName == "Food":
             self.metrics["attract"].clear()
             for entity in self.sprites():
-                self.metrics["attract"].array[self.gameState.positionToDiscrete(entity.position())] = 1
+                self.metrics["attract"].array[self.gameState.positionToDiscrete(entity.position())] = 1048576
                                    
         #Diffuse metric arrays
         for metric in self.metrics.itervalues():
             metric.diffuse()
 
-        if self.groupName == "Food":
-            for entity in self.sprites():
-                self.metrics["attract"].array[self.gameState.positionToDiscrete(entity.position())] = 100
+#        if self.groupName == "Food":
+#            for entity in self.sprites():
+#                self.metrics["attract"].array[self.gameState.positionToDiscrete(entity.position())] = 100
 
             
     def getMetricNames(self):
