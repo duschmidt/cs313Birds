@@ -4,6 +4,7 @@ import numpy as np
 #import scipy.signal as sig
 import random as rand
 from Bird import Bird
+import math
 
 numBirds = 8 # number of birds in the map
 goalProb = 0.005 # the probability that new food will appear
@@ -31,28 +32,35 @@ class Cell:
         self.col = col
         self.row = row
         self.type = type
-        self.rect = Surface.create_rectangle(x1, y1, x2, y2, fill=self.whichColor(0))
-
-    def whichColor(self, diffusionValue):
+        self.rect = Surface.create_rectangle(x1, y1, x2, y2, fill=self.whichColor(0,100))
+        self.text = Surface.create_text((x1+x2)/2.0,(y1+y2)/2.0, text = '0')
+    def whichColor(self, diffusionValue, maxValue):
         if self.type == '0':
             return "#000000" # obstacle - black
         elif self.type == '*':
             return "#FF0000" # food - red
         else:
             # blank cell - return color based on diffusion value
-            return "#%02XFFFF" % int(abs(255 * (1 - diffusionValue)))
+            val = 0
+            try:
+                val = diffusionValue / float(maxValue)
+                if math.isnan(val): val=0
+            except:
+                val = 0
+            return "#%02XFFFF" % int(abs(255 * (1 - val)))
             
 
-    def updateColor(self, Surface, diffusionValue):
-        Surface.itemconfig(self.rect, fill=self.whichColor(diffusionValue))
+    def updateColor(self, Surface, diffusionValue, maxValue):
+        Surface.itemconfig(self.rect, fill=self.whichColor(diffusionValue, maxValue))
+        Surface.itemconfig(self.text, text=str(diffusionValue))
         
     def __eq__(self, other):
         return self.col == other.col and self.row == other.row
         
 class MapFrame(Frame):
     # width / height of canvas in pixels
-    canvasWidth = 400
-    canvasHeight = 400
+    canvasWidth = 800
+    canvasHeight = 800
     cells = []
     birds = [] # list of birds in the map
         
@@ -185,8 +193,8 @@ class MapFrame(Frame):
         cell = self.cellInDirection(cell, direction)
         if self.occupied(cell) or cell.type == '0':
             return -1
-        elif cell.type == '*': # goal type
-            return 100
+        #elif cell.type == '*': # goal type
+        #    return 100
         else:
             return self.diffusionAry[cell.col, cell.row]
 
@@ -228,6 +236,7 @@ class MapFrame(Frame):
     #Map Method
     def manualDiffuse(self, numDiffusions):
         """Works correctly with obstacles, but is slow"""
+        print "Manual"
         for d in xrange(numDiffusions):
             for col in range(self.numCols):
                 for row in range(self.numRows):
@@ -238,19 +247,22 @@ class MapFrame(Frame):
     #Map Method
     #Adapted from http://stackoverflow.com/questions/8102781/efficiently-doing-diffusion-on-a-2d-map-in-python
     def diffuse(self, numDiffusions):
+        seed = self.diffusionAry.copy()
+        ary = self.diffusionAry
         for i in xrange(numDiffusions):
             # mode='same' means the output array should be the same size
             # bounary='wrap' means to wrap the convolution around the array dimensions
             #self.diffusionAry = sig.convolve2d(self.diffusionAry, diffusionKernel, mode='same', boundary='wrap') * self.obstacleAry
-            ary = self.diffusionAry
+            newAry = ary.copy()
             for i in (-1, 1):
                 for j in (0, 1):                    
-                    ary += (diffuseAmt*np.roll(self.diffusionAry*self.obstacleAry, i, j))
-            self.diffusionAry = ary * self.obstacleAry
+                    newAry += np.roll(ary, i, j)*self.obstacleAry
+            ary = ((newAry + seed) * self.obstacleAry)
+        self.diffusionAry = ary
         # convolution is unbounded, so scale the array to range [0, 1]
-        max = np.max(self.diffusionAry)
-        if max > 0:
-            self.diffusionAry /= max
+        # max = np.max(self.diffusionAry)
+        # if max > 0:
+        #     self.diffusionAry /= max
     
     #Frame method that acts on Map object             
     def drawGrid(self):
@@ -258,11 +270,12 @@ class MapFrame(Frame):
             for cellList in self.cells:
                 for cell in cellList:
                     max = np.max(self.diffusionAry)
-                    if max:
-                        scaled = self.diffusionAry[cell.col, cell.row] / max
-                    else:
-                        scaled = 0
-                    cell.updateColor(self.Surface, scaled)
+                    val = self.diffusionAry[cell.col, cell.row]
+                    #if max:
+                    #    scaled =  / max
+                    #else:
+                    #    scaled = 0
+                    cell.updateColor(self.Surface, val, max)
 
     #Frame method that acts on AgentGroup
     def drawBirds(self):
@@ -279,8 +292,8 @@ class MapFrame(Frame):
             if cell.type != '0':
                 cell.type = '*'
         self.seedDiffusion()
-        if np.max(self.diffusionAry): # are there any goals?
-            self.diffuse(numDiffusions=50)
+        #if np.max(self.diffusionAry): # are there any goals?
+        self.diffuse(numDiffusions=10)
         self.drawGrid()
         self.drawBirds()
 
