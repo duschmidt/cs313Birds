@@ -1,3 +1,4 @@
+
 from Tkinter import *
 import Tkinter as tkinter
 import numpy as np
@@ -224,7 +225,7 @@ class MapFrame(Frame):
         total += self.diffusionAry[(col + 1) % self.numCols][row]
         total += self.diffusionAry[(col - 1) % self.numCols][row]
         return total
-    
+
     #Map Method
     def manualDiffuse(self, numDiffusions):
         """Works correctly with obstacles, but is slow"""

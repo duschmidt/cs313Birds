@@ -3,9 +3,21 @@ Birds requires the following libraries:
     *numpy
     *scipy
 
-To install these libraries, use:
+To install these libraries on Linux, use:
 
 ➜ sudo apt-get install python-pip 
 ➜ sudo apt-get install libatlas-base-dev gfortran
 ➜ sudo pip install scipy
 ➜ sudo apt-get install python-pygame
+
+
+Build instructions:
+To run Birds, enter the 'Birds' directory and use:
+
+➜ python setup.py build build_ext --inplace
+
+This builds the diffusion Numpy extension 'diffuse.c' as a runnable Python module called 'diffuse.so' using the extension found in 'setup.py'.
+
+Then, simply run the Main.py file with python, using:
+
+➜ python Main.py

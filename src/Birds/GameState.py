@@ -5,6 +5,7 @@ from EntityGroup import EntityGroup
 from Entity import Entity
 from Metric import Metric
 from Frame import Cell
+from Food import Food
 
 class GameState():
 	"""This is the top level class responsible for managing game state"""
@@ -13,12 +14,12 @@ class GameState():
 	def __init__(self, mapFile):
 		"""Constructs a new GameState object"""
                 # load obstacle array from map file
-                Metric.obstacleAry = np.loadtxt(mapFile, dtype='c').astype('int')
+                Metric.obstacleAry = np.loadtxt(mapFile, dtype='c').astype('double')
                 # how many columns and rows are in this map?  (it is assumed that maps are rectangular)
                 # instantiate EntityGroups
-                self.entityGroups["Bird"] = EntityGroup(self, "Bird", [Metric("attract",  0.3, 30),
-                                                                       Metric("repulse", -0.1, 30)])
-                self.entityGroups["Food"] = EntityGroup(self, "Food", [Metric("attract",  0.5, 30)])
+                self.entityGroups["Bird"] = EntityGroup(self, "Bird", [Metric("attract",  0.2, 100),
+                                                                       Metric("repulse", -0.1, 100)])
+                self.entityGroups["Food"] = EntityGroup(self, "Food", [Metric("attract",  0.2, 100)])
 
         def initBirds(self):
             self.entityGroups["Bird"].initBirds()
@@ -45,13 +46,16 @@ class GameState():
 		for entityGroup in self.entityGroups.itervalues():
                     entityGroup.update()
 
+        def addFood(self, position):
+            self.entityGroups["Food"].add(Food(self, 0, position))
+            
 	def getAllUpdatedEntities(self):
             """Returns a list of Entity objects whose states were updated as a result of the last call to update."""
             pass #TODO: waiting on EntityGroup.getUpdatedEntities
 
         def getGroups(self):
             """Returns a view into all entity groups"""
-            return self.entityGroups.itervalues()
+            return self.entityGroups.values()
             
 	def positionToDiscrete(self, position):
             """Convert a continuous position given by position into discrete cells"""
