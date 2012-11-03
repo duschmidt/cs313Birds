@@ -28,9 +28,8 @@ class Metric:
     def diffuse(self):
         # could speed this up even more by doing all iterations and array
         # multiplications in c
-        for d in xrange(self.diffusionIterations):
-            self.array = diffuse.diffuse(self.array, self.obstacleAry)
-            self.array *= self.obstacleAry
+        self.array = diffuse.diffuse(self.diffusionIterations, self.rate,
+                                     self.array, self.obstacleAry)
             
     #Map Method, maybe a frame method?
     def positionInDirection(self, pos, direction):

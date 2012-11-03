@@ -53,15 +53,24 @@ void free_Carrayptrs(double **v)  {
     free((char*) v);
 }
 
+/*
+ * Diffuse a 2d numpy array using the given number of iterations, rate,
+ * metric array and obstacle array.
+ 
+ * Usage: newMetricArray = diffuse(int numIterations, float rate,
+ *                                 2dNpAry metricArray, 2dNpAry obstacleAry)
+ */
 static PyObject *diffuse(PyObject *self, PyObject *args) {
     PyArrayObject *metricArray, *obstacleArray, *resultArray;
     double **cMetricArray, **cResultArray, **cObstacleArray;
-    int col, row, numCols, numRows, left, right, up, down, obstacleValue;
+    int numIterations, i, col, row, numCols, numRows, left, right, up, down, obstacleValue;
     int dimensions[2];
-    double total, localValue, leftValue, rightValue, upValue, downValue;
+    double rate, total, localValue, leftValue, rightValue, upValue, downValue;
 
     // parse metric and obstacle arrays and check return value
-    if (!PyArg_ParseTuple(args, "O!O!", &PyArray_Type, &metricArray, &PyArray_Type, &obstacleArray))
+    if (!PyArg_ParseTuple(args, "idO!O!", &numIterations, &rate,
+                          &PyArray_Type, &metricArray,
+                          &PyArray_Type, &obstacleArray))
         return NULL;
     if (metricArray == NULL || obstacleArray == NULL)
         return NULL;
@@ -73,26 +82,38 @@ static PyObject *diffuse(PyObject *self, PyObject *args) {
     cMetricArray = pymatrix_to_Carrayptrs(metricArray);
     cObstacleArray = pymatrix_to_Carrayptrs(obstacleArray);
     cResultArray = pymatrix_to_Carrayptrs(resultArray);
-    
+
     for (col = 0; col < numCols; col++) {
-        left = col - 1 < 0 ? numCols - 1 : col - 1;
-        right = col + 1 >= numCols ? 0 : col + 1;
         for (row = 0; row < numRows; row++) {
-            obstacleValue = cObstacleArray[col][row];
-            localValue = cMetricArray[col][row];
-            if (obstacleValue > 0 && localValue < 1.0) {
-                up = row - 1 < 0 ? numRows - 1 : row - 1;
-                down = row + 1 >= numRows ? 0 : row + 1;
-                leftValue =  cMetricArray[left][row];
-                rightValue = cMetricArray[right][row];
-                upValue =    cMetricArray[col][up];
-                downValue =  cMetricArray[col][down];
-                // sum of neighbors
-                total = leftValue + rightValue + upValue + downValue;
-                // final diffusion value for col, row
-                cResultArray[col][row] = 0.2 * total;
-            } else {
-                cResultArray[col][row] = cMetricArray[col][row];
+            cResultArray[col][row] = cMetricArray[col][row];
+        }
+    }
+    
+    for (i = 0; i < numIterations; i++) {
+        for (col = 0; col < numCols; col++) {
+            left = col - 1 < 0 ? numCols - 1 : col - 1;
+            right = col + 1 >= numCols ? 0 : col + 1;
+            for (row = 0; row < numRows; row++) {
+                obstacleValue = cObstacleArray[col][row];
+                localValue = cMetricArray[col][row];
+                if (obstacleValue > 0 && localValue < 1.0) {
+                    up = row - 1 < 0 ? numRows - 1 : row - 1;
+                    down = row + 1 >= numRows ? 0 : row + 1;
+                    leftValue =  cResultArray[left][row];
+                    rightValue = cResultArray[right][row];
+                    upValue =    cResultArray[col][up];
+                    downValue =  cResultArray[col][down];
+                    // sum of neighbors
+                    total = leftValue + rightValue + upValue + downValue;
+                    // final diffusion value for col, row
+                    cResultArray[col][row] = rate * total;
+                }
+            }
+        }
+
+        for (col = 0; col < numCols; col++) {
+            for (row = 0; row < numRows; row++) {
+                cResultArray[col][row] *= cObstacleArray[col][row];
             }
         }
     }
