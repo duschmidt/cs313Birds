@@ -30,15 +30,13 @@ class Cell:
 
     def draw(self, screen, color):
         if self.color == OBSTACLE_COLOR:
-            color = (255, 255, 255)
+            color = self.color
         pygame.draw.rect(screen, color, (self.x, self.y, self.width, self.height))
 
-def calcColor(value, max):
-    if not value:
-        return (0, 0, 0)
-    val = int((value * 255) / max)
+def calcColor(value):
+    val = int((value * 255))
 
-    return (0, 0, val)
+    return (255, 255, 255 - val)
     
 class Frame:
     running = False
@@ -82,8 +80,7 @@ class Frame:
         # Draw all cells
         for col in range(self.numCols):
             for row in range(self.numRows):
-                self.grid[col][row].draw(self.screen, calcColor(foodGroup.metrics["attract"].array[col, row], np.max(foodGroup.metrics["attract"].array)))
-                #self.grid[col][row].draw(self.screen, calcColor(foodGroup.metrics["attract"].inflation[col, row], 1))
+                self.grid[col][row].draw(self.screen, calcColor(foodGroup.metrics["attract"].array[col, row]))
         
     def draw(self, gameState, spriteGroups):
         """Draw one frame"""

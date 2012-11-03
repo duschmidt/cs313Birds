@@ -17,9 +17,9 @@ class GameState():
                 Metric.obstacleAry = np.loadtxt(mapFile, dtype='c').astype('double')
                 # how many columns and rows are in this map?  (it is assumed that maps are rectangular)
                 # instantiate EntityGroups
-                self.entityGroups["Bird"] = EntityGroup(self, "Bird", [Metric("attract",  0.2, 100),
-                                                                       Metric("repulse", -0.1, 100)])
-                self.entityGroups["Food"] = EntityGroup(self, "Food", [Metric("attract",  0.2, 100)])
+                self.entityGroups["Bird"] = EntityGroup(self, "Bird", [Metric("attract",  0.2, 5000),
+                                                                       Metric("repulse", -0.1, 5000)])
+                self.entityGroups["Food"] = EntityGroup(self, "Food", [Metric("attract",  0.2, 5000)])
 
         def initBirds(self):
             self.entityGroups["Bird"].initBirds()
