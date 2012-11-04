@@ -14,7 +14,7 @@ class GameState():
 	def __init__(self, mapFile):
 		"""Constructs a new GameState object"""
                 # load obstacle array from map file
-                Metric.obstacleAry = np.loadtxt(mapFile, dtype='c').astype('double')
+                Metric.obstacleAry = np.loadtxt(mapFile, dtype='c').astype('int')
                 # how many columns and rows are in this map?  (it is assumed that maps are rectangular)
                 # instantiate EntityGroups
                 self.entityGroups["Bird"] = EntityGroup(self, "Bird", [Metric("attract",  0.2, 1000),
