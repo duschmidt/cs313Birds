@@ -19,18 +19,6 @@ PyMODINIT_FUNC initdiffuse(void) {
     import_array();
 }
 
-/* Allocate a double *vector (vec of pointers)
- * Memory is Allocated!  See void free_Carray(double ** )
- */
-double **ptrvector(long n)  {
-    double **v;
-    v=(double **)malloc((size_t) (n*sizeof(double)));
-    if (!v)   {
-        printf("In **ptrvector. Allocation of memory for double array failed.");
-        exit(0);  }
-    return v;
-}
-
 /* Create Carray from PyArray
  * Assumes PyArray is contiguous in memory.
  * Memory is allocated!
@@ -41,16 +29,13 @@ double **pymatrix_to_Carrayptrs(PyArrayObject *arrayin)  {
     
     n=arrayin->dimensions[0];
     m=arrayin->dimensions[1];
-    c=ptrvector(n);
-    a=(double *) arrayin->data;  /* pointer to arrayin data as double */
-    for ( i=0; i<n; i++)  {
-        c[i]=a+i*m;  }
+    // Allocate a double *vector (vec of pointers)
+    c = (double **)malloc((size_t) (n*sizeof(double)));
+    a = (double *)arrayin->data;  /* pointer to arrayin data as double */
+    for (i = 0; i < n; i++)  {
+        c[i]=a+i*m;
+    }
     return c;
-}
-
-/* Free a double *vector (vec of pointers) */ 
-void free_Carrayptrs(double **v)  {
-    free((char*) v);
 }
 
 /*
@@ -62,10 +47,10 @@ void free_Carrayptrs(double **v)  {
  */
 static PyObject *diffuse(PyObject *self, PyObject *args) {
     PyArrayObject *metricArray, *obstacleArray, *resultArray;
+    double rate;
     double **cMetricArray, **cResultArray, **cObstacleArray;
-    int numIterations, i, col, row, numCols, numRows, left, right, up, down, obstacleValue;
+    int numIterations, i, col, row, left, right, up, down, numCols, numRows;
     int dimensions[2];
-    double rate, total, localValue, leftValue, rightValue, upValue, downValue;
 
     // parse metric and obstacle arrays and check return value
     if (!PyArg_ParseTuple(args, "idO!O!", &numIterations, &rate,
@@ -83,6 +68,7 @@ static PyObject *diffuse(PyObject *self, PyObject *args) {
     cObstacleArray = pymatrix_to_Carrayptrs(obstacleArray);
     cResultArray = pymatrix_to_Carrayptrs(resultArray);
 
+    // copy metric array into result array
     for (col = 0; col < numCols; col++) {
         for (row = 0; row < numRows; row++) {
             cResultArray[col][row] = cMetricArray[col][row];
@@ -94,33 +80,30 @@ static PyObject *diffuse(PyObject *self, PyObject *args) {
             left = col - 1 < 0 ? numCols - 1 : col - 1;
             right = col + 1 >= numCols ? 0 : col + 1;
             for (row = 0; row < numRows; row++) {
-                obstacleValue = cObstacleArray[col][row];
-                localValue = cMetricArray[col][row];
-                if (obstacleValue > 0 && localValue < 1.0) {
+                if (cObstacleArray[col][row] > 0.0 && cMetricArray[col][row] < 1.0) {
                     up = row - 1 < 0 ? numRows - 1 : row - 1;
                     down = row + 1 >= numRows ? 0 : row + 1;
-                    leftValue =  cResultArray[left][row];
-                    rightValue = cResultArray[right][row];
-                    upValue =    cResultArray[col][up];
-                    downValue =  cResultArray[col][down];
-                    // sum of neighbors
-                    total = leftValue + rightValue + upValue + downValue;
-                    // final diffusion value for col, row
-                    cResultArray[col][row] = rate * total;
+                    // final diffusion value for col, row is the sum of neighbors times diffusion rate
+                    cResultArray[col][row] = rate * (cResultArray[left][row] +
+                                                     cResultArray[right][row] +
+                                                     cResultArray[col][up] +
+                                                     cResultArray[col][down]);
                 }
             }
         }
 
+        // multiply metric array by obstacle array to zero out obstacle cells in each iteration
         for (col = 0; col < numCols; col++) {
             for (row = 0; row < numRows; row++) {
                 cResultArray[col][row] *= cObstacleArray[col][row];
             }
         }
     }
-    
-    free_Carrayptrs(cMetricArray);
-    free_Carrayptrs(cObstacleArray);
-    free_Carrayptrs(cResultArray);
+
+    // free allocated memory
+    free((char*)cMetricArray);
+    free((char*)cObstacleArray);
+    free((char*)cResultArray);
     
     return PyArray_Return(resultArray);
 }
