@@ -35,15 +35,14 @@ def load_image(name, position, dims, colorkey=None):
 
 class Entity(Sprite):
 	"""This is a base class for game entities"""
+        name = "entity"
 	gameState = None	#:reference to master game state object
-	id =    0		#:some meaningful identifier for this entity
         imageName = None
         discretePosition = []
         
-	def __init__(self, gameState, id, discretePosition):
+	def __init__(self, gameState, discretePosition):
 		"""Constructs a new entity object at the given position"""
 		Sprite.__init__(self) #initialize base class
-                self.id = id
 		self.gameState = gameState
                 self.discretePosition = discretePosition
                 continuousPosition = (discretePosition[0] * Cell.width, discretePosition[1] * Cell.height)

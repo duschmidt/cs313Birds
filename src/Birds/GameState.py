@@ -17,12 +17,15 @@ class GameState():
                 Metric.obstacleAry = np.loadtxt(mapFile, dtype='c').astype('int')
                 # how many columns and rows are in this map?  (it is assumed that maps are rectangular)
                 # instantiate EntityGroups
-                self.entityGroups["Bird"] = EntityGroup(self, "Bird", [Metric("attract",  0.2, 400),
-                                                                       Metric("repulse", -0.1, 400)])
-                self.entityGroups["Food"] = EntityGroup(self, "Food", [Metric("attract",  0.2, 400)])
+                self.entityGroups["bird"] = EntityGroup(self, "bird", [Metric("attract",  0.2, 400)])
+                self.entityGroups["food"] = EntityGroup(self, "food", [Metric("food",  0.2, 400)])
+                self.entityGroups["hawk"] = EntityGroup(self, "hawk", [])
 
         def initBirds(self):
-            self.entityGroups["Bird"].initBirds()
+            self.entityGroups["bird"].initBirds()
+
+        def initHawks(self):
+            self.entityGroups["hawk"].initHawks()
             
         def getDiscreteDimensions(self):
             return Metric.obstacleAry.shape[0], Metric.obstacleAry.shape[1]
@@ -35,7 +38,7 @@ class GameState():
             while True:
                 discretePos = (randint(0, Metric.obstacleAry.shape[0] - 1),
                                randint(0, Metric.obstacleAry.shape[1] - 1))
-                if not (self.isFoodAtPosition(discretePos) or self.isObstacleAtPosition(discretePos)):
+                if not (self.getEntitiesAtPosition(discretePos) or self.isObstacleAtPosition(discretePos)):
                     break
                     
             return discretePos
@@ -47,7 +50,7 @@ class GameState():
 
         def addFood(self, position):
             if Metric.obstacleAry[position]:
-                self.entityGroups["Food"].add(Food(self, 0, position))
+                self.entityGroups["food"].add(Food(self, 0, position))
             
 	def getAllUpdatedEntities(self):
             """Returns a list of Entity objects whose states were updated as a result of the last call to update."""
@@ -65,29 +68,20 @@ class GameState():
             """Add the given entity to the group given by groupName"""
             self.entityGroups[groupName].addEntity(entity)
 
-	def removeEntity(self, entity, groupName):
+	def removeEntity(self, entity):
             """Remove the givent entity from the group given by groupName"""
-            self.entityGroups[groupName].remove(entity)
+            self.entityGroups[entity.groups()[0].name].remove(entity)
 
-        def isEntityAtPosition(self, groupName, position):
+        def isEntityTypeAtPosition(self, entityTypeName, position):
             """If any entity object of the given group type is occupying the discrete cell
             which contains the given position, return True, else return False"""
-            for entity in self.entityGroups[groupName].sprites():
+            for entity in self.entityGroups[entityTypeName].sprites():
                 if entity.discretePosition == position:
                     return True
                     
             return False
+
             
-        def isBirdAtPosition(self, position):
-            """If any bird is occupying the discrete cell
-            which contains the given position, return True, else return False"""
-            return self.isEntityAtPosition("Bird", position)
-
-        def isFoodAtPosition(self, position):
-            """If a food item is occupying the discrete cell
-            which contains the given position, return True, else return False"""
-            return self.isEntityAtPosition("Food", position)
-
         def isObstacleAtPosition(self, position):
             """If an obstacle is occupying the discrete cell
             which contains the given position, return True, else return False"""

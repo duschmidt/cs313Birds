@@ -1,9 +1,9 @@
 from MovingEntity import MovingEntity
 
-class Bird(MovingEntity):
+class Hawk(MovingEntity):
     """This is the entity class for birds"""
-    name = "bird"
-    imageName = "bird.png"
+    name = "hawk"
+    imageName = "hawk.png"
     
     def update(self):
         """Update the bird's position"""
@@ -12,6 +12,5 @@ class Bird(MovingEntity):
     def eat(self):
         # birds eat food
         for entity in self.gameState.getEntitiesAtPosition(self.discretePosition):
-            if entity.name == "food":
+            if entity.name == "bird":
                 self.gameState.removeEntity(entity)
-        

@@ -65,10 +65,6 @@ class Frame:
         # fill BG
         self.background.fill(BACKGROUND_COLOR)
 
-        for group in spriteGroups:
-            if group.name == "Food":
-               foodGroup = group
-                        
         # Draw all cells
         for col in range(self.numCols):
             for row in range(self.numRows):
@@ -91,14 +87,14 @@ class Frame:
                 # add food at click position
                 gameState.addFood((col, row))
 
-    def draw(self, gameState, spriteGroups):
+    def draw(self, gameState, entityGroups):
         """Draw one frame"""
         # Get our event. Prosessing one at a time because of the nature of our game,
         # we don't need to consider the possibility of simultanious input.
         self.handleEvents(gameState)
-        self.drawEnvironment(spriteGroups)
-        for group in spriteGroups:
-            group.draw(self.screen)
+        self.drawEnvironment(entityGroups)
+        for entityGroup in entityGroups:
+            entityGroup.draw(self.screen)
             
         pygame.display.update()
             

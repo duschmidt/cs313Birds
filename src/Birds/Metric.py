@@ -26,8 +26,6 @@ class Metric:
         self.array.fill(0)
 
     def diffuse(self):
-        # could speed this up even more by doing all iterations and array
-        # multiplications in c
         self.array = diffuse.diffuse(self.diffusionIterations, self.rate,
                                      self.array, self.obstacleAry)
             
@@ -61,6 +59,7 @@ class Metric:
         # find the diffusion values neighboring the bird
         for direction in ('N', 'S', 'E', 'W'):
             neighborValues[direction] = self.array[self.positionInDirection(position, direction)]
-        # find direction with the max diffusion value
+            
+        # order the directions by their diffusion values
         return reversed(sorted(neighborValues, key=neighborValues.get))
 
