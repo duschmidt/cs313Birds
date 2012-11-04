@@ -4,14 +4,11 @@ from Frame import Cell
 class Bird(Entity):
     """This is the entity class for birds"""
 
-    def __init__(self, gameState, id, position):
-        Entity.__init__(self, gameState, id, position)
-        self.image, self.rect = load_image("bird.png", position, (Cell.width, Cell.height))
-
+    imageName = "bird.png"
     def update(self):
         """Update the bird's position"""
         # move to new cell if it's not occupied with a bird (value of -1)
-        rankedDirections = self.groups()[0].getRankedDirections(self.rect.topleft, "attract")
+        rankedDirections = self.groups()[0].getRankedDirections(self.discretePosition, "attract")
         newPos = None
         for direction in rankedDirections:
             newPos = self.positionInDirection(direction)
@@ -20,8 +17,10 @@ class Bird(Entity):
 
         if newPos == None: # no valid neighbors, don't move
             return
-        
-        self.rect.topleft = newPos
+            
         for entity in self.gameState.getEntitiesAtPosition(newPos):
             if entity.id == 0:
                 self.gameState.removeEntity(entity, "Food")
+
+        self.discretePosition = newPos
+        self.rect.topleft = (newPos[0] * Cell.width, newPos[1] * Cell.height)
