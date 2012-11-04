@@ -24,11 +24,11 @@ def load_image(name, position, dims, colorkey=None):
     except pygame.error, message:
         print 'Cannot load image:', name
         raise SystemExit, message
-    image = image.convert()
+    image = image.convert_alpha()
     if colorkey is not None:
         if colorkey is -1:
             colorkey = image.get_at((0, 0))
-        emage.set_colorkey(colorkey, RLEACCEL)
+        image.set_colorkey(colorkey, pygame.RLEACCEL)
     #return image, image.get_rect()
     images[name] = pygame.transform.smoothscale(image, dims)
     return images[name], Rect(position, dims)
@@ -48,7 +48,7 @@ class Entity(Sprite):
                 self.discretePosition = discretePosition
                 continuousPosition = (discretePosition[0] * Cell.width, discretePosition[1] * Cell.height)
                 # load the image and position rectangle for this entity, using the image name provided
-                self.image, self.rect = load_image(self.imageName, continuousPosition, (Cell.width, Cell.height))
+                self.image, self.rect = load_image(self.imageName, continuousPosition, (Cell.width, Cell.height), -1)
                 
 	def update(self):
 		"""Abstract method to be overridden by inherited classes.

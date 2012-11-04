@@ -17,9 +17,9 @@ class GameState():
                 Metric.obstacleAry = np.loadtxt(mapFile, dtype='c').astype('int')
                 # how many columns and rows are in this map?  (it is assumed that maps are rectangular)
                 # instantiate EntityGroups
-                self.entityGroups["Bird"] = EntityGroup(self, "Bird", [Metric("attract",  0.2, 1000),
-                                                                       Metric("repulse", -0.1, 1000)])
-                self.entityGroups["Food"] = EntityGroup(self, "Food", [Metric("attract",  0.2, 1000)])
+                self.entityGroups["Bird"] = EntityGroup(self, "Bird", [Metric("attract",  0.2, 400),
+                                                                       Metric("repulse", -0.1, 400)])
+                self.entityGroups["Food"] = EntityGroup(self, "Food", [Metric("attract",  0.2, 400)])
 
         def initBirds(self):
             self.entityGroups["Bird"].initBirds()
@@ -46,7 +46,8 @@ class GameState():
                 entityGroup.update()
 
         def addFood(self, position):
-            self.entityGroups["Food"].add(Food(self, 0, position))
+            if Metric.obstacleAry[position]:
+                self.entityGroups["Food"].add(Food(self, 0, position))
             
 	def getAllUpdatedEntities(self):
             """Returns a list of Entity objects whose states were updated as a result of the last call to update."""

@@ -22,7 +22,7 @@ class EntityGroup(Group):
             
     def initBirds(self):
         """Place random birds throughout the map"""
-        for i in range(2):
+        for i in range(20):
             self.add(Bird(self.gameState, 1, self.gameState.randomPosition()))
     
     def update(self):
