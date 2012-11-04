@@ -34,9 +34,9 @@ class Cell:
         pygame.draw.rect(screen, color, (self.x, self.y, self.width, self.height))
 
 def calcColor(value):
-    val = int((value * 255))
+    val = int((value * 200))
 
-    return (255, 255, 255 - val)
+    return (200, 200 - val, 200 - val)
     
 class Frame:
     running = False

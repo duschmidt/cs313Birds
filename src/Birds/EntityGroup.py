@@ -29,7 +29,7 @@ class EntityGroup(Group):
         """Updates member entities then applies diffusion to metric arrays"""
         Group.update(self) #the base update method calls update on all sprites in the group
         
-        if self.name == "Food" and random() < .05: # lazy way of doing this - should we have separate group classes?
+        if self.name == "Food" and random() < .1: # lazy way of doing this - should we have separate group classes?
             self.add(Food(self.gameState, 0, self.gameState.randomPosition()))
 
         if self.name == "Food":
