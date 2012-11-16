@@ -1,0 +1,8 @@
+
+
+Left click places food
+Right click pauses the game
+keypress 'p' activates plotting
+keypress 'f' sets food as plot parameter
+keypress 'b' sets bird as plot parameter
+keypress 'h' sets hawk as plot parameter
