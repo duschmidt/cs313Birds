@@ -9,11 +9,11 @@ from random import randint
 
 
 class Hawk():
-	weights = {'Food':{'weight':0,'dir':1},
-			   'Bird':{'weight':1,'dir':1},
-			   'Hawk':{'weight':-0.5,'dir':1},
-			   'HawkRepulse':{'weight':-0.5},
-			   'BirdRepulse':{'weight':0,'dir':1}}
+	weights = {'Food':{'weight':0},
+			   'Bird':{'weight':1},
+			   'Hawk':{'weight':-0.5},
+			   'HawkRepulse':{'weight':0},
+			   'BirdRepulse':{'weight':0}}
 	def __init__(self, size):
 		self.alive = True
 		self.str = "H"
@@ -64,10 +64,10 @@ class Food():
 		return {'Food':10}
 
 class Bird():
-	weights = {'Food':{'weight':2,'dir':1},
-			   'Bird':{'weight':0.5,'dir':1},
-			   'Hawk':{'weight':-1,'dir':1},
-			   'BirdRepulse':{'weight':-0.02,'dir':1}}
+	weights = {'Food':{'weight':2},
+			   'Bird':{'weight':0.1},
+			   'Hawk':{'weight':0},
+			   'BirdRepulse':{'weight':0}}
 	def __init__(self, size):
 		self.alive = True
 		self.str = "B"
