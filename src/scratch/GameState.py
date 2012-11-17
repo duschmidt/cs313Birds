@@ -7,103 +7,90 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm, Colormap
 from random import randint
 
+moves = [(-1,-1), (-1,0), (-1,1),
+		 (0, -1),(0,0),(0,1),
+		 (1, -1),(1,0),(1,1)]
+noneNeighborhood = np.empty((3,3),dtype=object)
 
-class Hawk():
-	weights = {'Food':{'weight':0},
-			   'Bird':{'weight':1},
-			   'Hawk':{'weight':-0.5},
-			   'HawkRepulse':{'weight':0},
-			   'BirdRepulse':{'weight':0}}
-	def __init__(self, size):
+
+gameData = {
+ 'Metrics':{
+ 			'FoodMetric':{'rate':0.9,'iters':30},
+		    'BirdMetric':{'rate':0.9,'iters':30},
+		    'HawkMetric':{'rate':0.9,'iters':30}
+		   },
+ 'Entities':{
+			'Food':{ 'Eats':[],
+					 'Weights':{},
+					 'MapChar':'F',
+					 'Image':'apple.png',
+					 'Affects':{'FoodMetric':1},
+					 'Moves':False
+					},
+			'Bird':{ 'Eats':['Food'],
+					 'Weights':{
+					 			'FoodMetric':1,
+			   					'BirdMetric':0,
+			   					'HawkMetric':0
+			   					},
+					 'MapChar':'B',
+					 'Image':'bird.png',
+					 'Affects':{'BirdMetric':1},
+					 'Moves':False
+					},
+			'Hawk':{ 'Eats':['Bird', 'Food'],
+					 'Weights':{
+					 			'FoodMetric':0.5,
+			   					'BirdMetric':1,
+			   					'HawkMetric':0
+			   					},
+					 'MapChar':'H',
+					 'Image':'hawk.png',
+					 'Affects':{'HawkMetric':1},
+					 'Moves':True
+					}
+			},
+ 'InsertEntity':'Food'
+}
+
+class Entity():
+	def __init__(self, size, name):
 		self.alive = True
-		self.str = "H"
-		self.canvasItemId = -1
-		im = Image.open("hawk.png")
-		im = im.resize(size)
-		self.image = ImageTk.PhotoImage(image=im)
-		self.skill = 1
-	def getMove(self, neighborhood):
-		a = np.zeros((3,3))
-		for k, v in self.weights.items():
-			a += v['weight']*neighborhood[k]
-
-		maxAt = np.argmax(a)
-		moves = [(-1,-1),
-				 (-1,0),
-				 (-1,1),
-				 (0,-1),
-				 (randint(-1,1),randint(-1,1)),
-				 (0,1),
-				 (1,-1),
-				 (1,0),
-				 (1,1)]
-		coords = np.nonzero(neighborhood['entities'])
-		for row, col in zip(coords[0], coords[1]):
-			if isinstance(neighborhood['entities'][row,col],Bird):
-				#global kill
-				#kill = True
-				#maxAt = (row,col)
-				neighborhood['entities'][row,col] = None
-				self.skill +=10
-
-		return moves[maxAt]
-	def getMetrics(self):
-		return {'Hawk':self.skill,'HawkRepulse':2}
-
-class Food():
-	def __init__(self, size):
-		self.alive = True
-		self.str = "F"
-		self.canvasItemId = -1
-		im = Image.open("apple.png")
-		im = im.resize(size)
-		self.image = ImageTk.PhotoImage(image=im)
-	def getMove(self, neighborhood):
-		return (0,0)
-	def getMetrics(self):
-		return {'Food':10}
-
-class Bird():
-	weights = {'Food':{'weight':2},
-			   'Bird':{'weight':0.1},
-			   'Hawk':{'weight':0},
-			   'BirdRepulse':{'weight':0}}
-	def __init__(self, size):
-		self.alive = True
-		self.str = "B"
+		self.name = name
 		self.canvasItemId = -1
 		self.skill = 10
-		im = Image.open("bird.png")
+		im = Image.open(gameData['Entities'][self.name]['Image'])
 		im = im.resize(size)
 		self.image = ImageTk.PhotoImage(image=im)
 	def getMove(self, neighborhood):
-		a = np.zeros((3,3))
-		for k, v in self.weights.items():
-			a += v['weight']*neighborhood[k]
+		if not gameData['Entities'][self.name]['Moves']:
+			return(0,0)
 
+		a = np.zeros((3,3))
+		
+		for k, v in gameData['Entities'][self.name]['Weights'].items():
+			a += v*neighborhood[k]
+
+		a *= neighborhood['obstacles']
+		a *= np.equal(noneNeighborhood,neighborhood['entities'])
 		maxAt = np.argmax(a)
-		moves = [(-1,-1),
-				 (-1,0),
-				 (-1,1),
-				 (0,-1),
-				 (randint(-1,1),randint(-1,1)),
-				 (0,1),
-				 (1,-1),
-				 (1,0),
-				 (1,1)]
+
+
 		coords = np.nonzero(neighborhood['entities'])
 		for row, col in zip(coords[0], coords[1]):
-			if isinstance(neighborhood['entities'][row,col],Food):
-				#global kill
-				#kill = True
-				#maxAt = (row,col)
+			if neighborhood['entities'][row,col].name in gameData['Entities'][self.name]['Eats']:
+				#self.skill += neighborhood['entities'][row,col].skill
 				neighborhood['entities'][row,col] = None
-				self.skill +=10
+				move = (row-1,col-1)
 
-		return moves[maxAt]
+		move = moves[maxAt]
+		if move[0] == 0 and move[1] == 0:
+			move = (randint(-1,1),randint(-1,1))
+
+		return move
 
 	def getMetrics(self):
-		return {'Bird':self.skill,'BirdRepulse':2}
+		return gameData['Entities'][self.name]['Affects']
 
 class Game(tk.Frame):
 	def __init__(self, master=tk.Tk(), height=900, width=900):
@@ -113,7 +100,7 @@ class Game(tk.Frame):
 		self.paused = False
 		plt.ion()
 		self.showPlot = False
-		self.plotVal = "Food"
+		self.plotVal = "FoodMetric"
 		self.height=height
 		self.width=width
 		self.loadMap()
@@ -134,8 +121,10 @@ class Game(tk.Frame):
 		self.Surface.pack()
 
 	def loadMap(self, mapFile='map1.map'):
-		noneFunc = lambda size: None
-		entityIDMapping = {'E':noneFunc,'F':Food,'B':Bird,'H':Hawk}
+		entityIDMapping = {}
+		for k, v in gameData['Entities'].items():
+			entityIDMapping[v['MapChar']] = k
+
 		gameMap = np.loadtxt(mapFile,dtype='c')
 		self.shape = gameMap.shape
 		self.entities = np.empty(gameMap.shape,dtype=object)
@@ -146,8 +135,9 @@ class Game(tk.Frame):
 			for col in range(self.shape[1]):
 				if gameMap[row,col] == 'O':
 					self.obstacles[row,col] = 0
-				else:
-					self.entities[row,col] = entityIDMapping[gameMap[row,col]](self.cellsize)
+				elif gameMap[row,col] != '.':
+
+					self.entities[row,col] = Entity(self.cellsize, entityIDMapping[gameMap[row,col]])
 
 	def cellToPixel(self, row, col):
 		"""Returns tuple (x,y) representing the upper left corner of the given cell in pixel coordinates"""
@@ -174,13 +164,12 @@ class Game(tk.Frame):
 		self.Surface.update()
 
 	def initMetrics(self):
-		self.metrics={'Hawk'		:{'rate':0.9,'iters':30,'seed':np.zeros(self.shape),'diffused':np.zeros(self.shape)},
-					  'HawkRepulse' :{'rate':0.1,'iters':30,'seed':np.zeros(self.shape),'diffused':np.zeros(self.shape)},
-					  'Bird'		:{'rate':0.9,'iters':30,'seed':np.zeros(self.shape),'diffused':np.zeros(self.shape)},
-					  'BirdRepulse' :{'rate':0.1,'iters':30,'seed':np.zeros(self.shape),'diffused':np.zeros(self.shape)},
-					  'Food'		:{'rate':0.9,'iters':30,'seed':np.zeros(self.shape),'diffused':np.zeros(self.shape)}}
+		self.metrics = {}
+		for k,v in gameData['Metrics'].items():
+			self.metrics[k] = v
+			self.metrics[k]['seed'] = np.zeros(self.shape)
+			self.metrics[k]['diffused'] = np.zeros(self.shape)
 		
-
 	def seedMetrics(self):
 		for name, data in self.metrics.items():
 			self.metrics[name]['seed'].fill(0)
@@ -197,12 +186,10 @@ class Game(tk.Frame):
 			itr = data['iters']
 			diff = data['diffused']
 			mask = np.logical_not(seed)
-			#self.metrics[name]['diffused'] = diffuse.diffuse(itr, rate,
-            #                         seed, self.obstacles)
-			#import pdb; pdb.set_trace()
 			for i in range(itr):
 				diff = rate*self.neighborCoeff*self.sumOfNeighbors(diff)*mask + seed
 			self.metrics[name]['diffused']=diff
+
 	def sumOfNeighbors(self, a):
 		new = np.zeros(a.shape)
 		new = np.roll(a,1,0)+np.roll(a,1,1)+np.roll(a,-1,0)+np.roll(a,-1,1)
@@ -223,7 +210,6 @@ class Game(tk.Frame):
 		self.seedMetrics()
 		self.diffuseMetrics()
 		coords = np.nonzero(self.entities)
-		global kill
 		for row, col in zip(coords[0], coords[1]):
 			if self.entities[row,col] == None or not self.entities[row,col].alive :
 				continue
@@ -275,7 +261,7 @@ class Game(tk.Frame):
 	def leftClick(self, event):
 		row, col = self.pixelToCell(event.x, event.y)
 		if self.entities[row, col] == None:
-			self.entities[row,col] = Food(self.cellsize)
+			self.entities[row,col] = Entity(self.cellsize, gameData['InsertEntity'])
 			img = self.Surface.create_image(self.cellToPixel(row,col), image=self.entities[row,col].image, anchor="nw")
 			self.entities[row,col].canvasItemId = img
 		# if self.paused:
@@ -290,11 +276,11 @@ class Game(tk.Frame):
 		if event.char == "p":
 			self.showPlot = not self.showPlot
 		elif event.char == "f":
-			self.plotVal = "Food"
+			self.plotVal = "FoodMetric"
 		elif event.char ==  "b":
-			self.plotVal = "Bird"
+			self.plotVal = "BirdMetric"
 		elif event.char == "h":
-			self.plotVal = "Hawk"
+			self.plotVal = "HawkMetric"
 
 
 	def rightClick(self, event):
