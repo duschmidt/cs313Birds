@@ -5,9 +5,15 @@ import ImageTk
 import diffuse
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm, Colormap
+from random import randint
 
 
 class Hawk():
+	weights = {'Food':{'weight':0,'dir':1},
+			   'Bird':{'weight':1,'dir':1},
+			   'Hawk':{'weight':-0.5,'dir':1},
+			   'HawkRepulse':{'weight':-0.5},
+			   'BirdRepulse':{'weight':0,'dir':1}}
 	def __init__(self, size):
 		self.alive = True
 		self.str = "H"
@@ -15,21 +21,34 @@ class Hawk():
 		im = Image.open("hawk.png")
 		im = im.resize(size)
 		self.image = ImageTk.PhotoImage(image=im)
+		self.skill = 1
 	def getMove(self, neighborhood):
-		#import pdb;pdb.set_trace()
-		maxAt = np.argmax(neighborhood['Bird'])
+		a = np.zeros((3,3))
+		for k, v in self.weights.items():
+			a += v['weight']*neighborhood[k]
+
+		maxAt = np.argmax(a)
 		moves = [(-1,-1),
 				 (-1,0),
 				 (-1,1),
 				 (0,-1),
-				 (0,0),
+				 (randint(-1,1),randint(-1,1)),
 				 (0,1),
 				 (1,-1),
 				 (1,0),
 				 (1,1)]
+		coords = np.nonzero(neighborhood['entities'])
+		for row, col in zip(coords[0], coords[1]):
+			if isinstance(neighborhood['entities'][row,col],Bird):
+				#global kill
+				#kill = True
+				#maxAt = (row,col)
+				neighborhood['entities'][row,col] = None
+				self.skill +=10
+
 		return moves[maxAt]
 	def getMetrics(self):
-		return {'Hawk':10,'HawkRepulse':2}
+		return {'Hawk':self.skill,'HawkRepulse':2}
 
 class Food():
 	def __init__(self, size):
@@ -45,10 +64,10 @@ class Food():
 		return {'Food':10}
 
 class Bird():
-	weights = {'Food':{'weight':1,'dir':1},
-			   'Bird':{'weight':0,'dir':1},
-			   'Hawk':{'weight':0,'dir':1},
-			   'BirdRepulse':{'weight':0,'dir':1}}
+	weights = {'Food':{'weight':2,'dir':1},
+			   'Bird':{'weight':0.5,'dir':1},
+			   'Hawk':{'weight':-1,'dir':1},
+			   'BirdRepulse':{'weight':-0.02,'dir':1}}
 	def __init__(self, size):
 		self.alive = True
 		self.str = "B"
@@ -58,36 +77,20 @@ class Bird():
 		im = im.resize(size)
 		self.image = ImageTk.PhotoImage(image=im)
 	def getMove(self, neighborhood):
-		a = {}
-		maxVal = 0
-		maxLayer = None
+		a = np.zeros((3,3))
 		for k, v in self.weights.items():
-			a[k] = v['weight']*neighborhood[k]
-			m = np.max(a)
-			if m>maxVal:
-				maxVal = m
-				maxLayer = k
+			a += v['weight']*neighborhood[k]
 
-		dir = self.weights[maxLayer]['dir']
-		maxAt = np.argmax(neighborhood['Food'])
-		moves = {1:[(-1,-1),
+		maxAt = np.argmax(a)
+		moves = [(-1,-1),
 				 (-1,0),
 				 (-1,1),
 				 (0,-1),
-				 (0,0),
+				 (randint(-1,1),randint(-1,1)),
 				 (0,1),
 				 (1,-1),
 				 (1,0),
-				 (1,1)],
-				 -1:[(1,1),
-				     (1,0),
-				     (1,-1),
-				     (0,1),
-				     (0,0),
-				     (0,-1),
-				     (-1,1),
-				     (-1,0),
-				     (-1,-1)]}
+				 (1,1)]
 		coords = np.nonzero(neighborhood['entities'])
 		for row, col in zip(coords[0], coords[1]):
 			if isinstance(neighborhood['entities'][row,col],Food):
@@ -97,7 +100,7 @@ class Bird():
 				neighborhood['entities'][row,col] = None
 				self.skill +=10
 
-		return moves[dir][maxAt]
+		return moves[maxAt]
 
 	def getMetrics(self):
 		return {'Bird':self.skill,'BirdRepulse':2}
@@ -109,7 +112,7 @@ class Game(tk.Frame):
 		self.deltaT = 1 #:Time delay in ms between frame updates, not guaranteed
 		self.paused = False
 		plt.ion()
-		self.showPlot = True
+		self.showPlot = False
 		self.plotVal = "Food"
 		self.height=height
 		self.width=width
@@ -205,14 +208,16 @@ class Game(tk.Frame):
 		new = np.roll(a,1,0)+np.roll(a,1,1)+np.roll(a,-1,0)+np.roll(a,-1,1)
 		return new
 
-
 	def getNeighborhood(self,row,col):
 		neighborhood = {}
 		neighborhood['entities'] = self.entities[row-1:row+2, col-1:col+2]
 		neighborhood['obstacles'] = self.obstacles[row-1:row+2, col-1:col+2]
 		for layer, data in self.metrics.items():
 			neighborhood[layer] = data['diffused'][row-1:row+2, col-1:col+2]
+			if neighborhood[layer].shape != (3,3):
+				print row, col
 		return neighborhood
+
 	def update(self):
 		#self.initMetrics()
 		self.seedMetrics()
@@ -220,12 +225,13 @@ class Game(tk.Frame):
 		coords = np.nonzero(self.entities)
 		global kill
 		for row, col in zip(coords[0], coords[1]):
-			if self.entities[row,col] == None or not self.entities[row,col].alive:
+			if self.entities[row,col] == None or not self.entities[row,col].alive :
 				continue
 			n = self.getNeighborhood(row,col)
 			move = self.entities[row,col].getMove(n)
 			newPos = ((row+move[0])%self.entities.shape[0], (col+move[1])%self.entities.shape[1])
-			if self.entities[newPos] == None or self.entities[newPos].alive==False:
+			
+			if self.obstacles[newPos] == 1 and (self.entities[newPos] == None or self.entities[newPos].alive==False):
 				self.entities[newPos] = self.entities[row, col]
 				self.entities[row,col] = None
 			#if kill:
@@ -252,6 +258,7 @@ class Game(tk.Frame):
 
 		plt.suptitle(self.plotVal)
 		m = self.metrics[self.plotVal]['diffused']
+		#import pdb; pdb.set_trace()
 		#lmin = np.min(m)
 		#from math import fabs
 		#n = fabs(lmin)*np.ones(m.shape)

@@ -1,0 +1,4 @@
+replace get ranked directions with a method that returns all layers in each direction
+	Modified entitygroup.getRankedDirections to return a dict of metric layers
+
+write an overriding update method for each Bird/Hawk/Food that can act on metric layers
