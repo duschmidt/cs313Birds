@@ -36,7 +36,7 @@ gameData = {
 					 'MapChar':'B',
 					 'Image':'bird.png',
 					 'Affects':{'BirdMetric':1},
-					 'Moves':False
+					 'Moves':True
 					},
 			'Hawk':{ 'Eats':['Bird', 'Food'],
 					 'Weights':{
@@ -50,7 +50,7 @@ gameData = {
 					 'Moves':True
 					}
 			},
- 'InsertEntity':'Food'
+ 'InsertEntity':['Food','Bird']
 }
 
 class Entity():
@@ -206,7 +206,6 @@ class Game(tk.Frame):
 		return neighborhood
 
 	def update(self):
-		#self.initMetrics()
 		self.seedMetrics()
 		self.diffuseMetrics()
 		coords = np.nonzero(self.entities)
@@ -220,11 +219,9 @@ class Game(tk.Frame):
 			if self.obstacles[newPos] == 1 and (self.entities[newPos] == None or self.entities[newPos].alive==False):
 				self.entities[newPos] = self.entities[row, col]
 				self.entities[row,col] = None
-			#if kill:
-			#	pass#self.paused=True
+
 		if self.showPlot: self.plot()
 		self.draw()
-		#plt.draw()
 
 	def draw(self):
 		coords = np.nonzero(self.entities)
@@ -238,54 +235,61 @@ class Game(tk.Frame):
 		
 
 	def plot(self):
-		#if self.plt = None:
 		plt.figure(0)
 		plt.clf()
-
 		plt.suptitle(self.plotVal)
-		m = self.metrics[self.plotVal]['diffused']
-		#import pdb; pdb.set_trace()
-		#lmin = np.min(m)
-		#from math import fabs
-		#n = fabs(lmin)*np.ones(m.shape)
+		m = None
+		if self.plotVal == "All":
+			m = np.zeros(self.shape)
+			for k, v in self.metrics.items():
+				m += v['diffused']
+		else:
+			m = self.metrics[self.plotVal]['diffused']
 		ln = LogNorm()
-		#m = n + m
-		#ln.autoscale(m)
 		plt.imshow(m,interpolation='none', norm=ln)
 		plt.contour(m,norm=ln,colors='black', linewidth=.5)
-		#plt.imshow(m,interpolation='none')
-		#plt.contour(m,colors='black', linewidth=.5)
-		#plt.canvas.draw()
 		plt.show()
 
 	def leftClick(self, event):
 		row, col = self.pixelToCell(event.x, event.y)
 		if self.entities[row, col] == None:
-			self.entities[row,col] = Entity(self.cellsize, gameData['InsertEntity'])
+			self.entities[row,col] = Entity(self.cellsize, gameData['InsertEntity'][0])
 			img = self.Surface.create_image(self.cellToPixel(row,col), image=self.entities[row,col].image, anchor="nw")
 			self.entities[row,col].canvasItemId = img
-		# if self.paused:
-		# 	self.update()
-			
-		# 	fCount = 0
-		# 	for Name, data in self.metrics.items():
-		# 		pass
 				
 	def keyPress(self, event):
-		print "KeyPress"
 		if event.char == "p":
+			self.paused = not self.paused
+			if not self.paused:
+				self.update()
+		elif event.char == "t":
 			self.showPlot = not self.showPlot
+			if self.showPlot:
+				self.plot()
 		elif event.char == "f":
 			self.plotVal = "FoodMetric"
+			self.plot()
 		elif event.char ==  "b":
 			self.plotVal = "BirdMetric"
+			self.plot()
 		elif event.char == "h":
 			self.plotVal = "HawkMetric"
+			self.plot()
+		elif event.char == "a":
+			self.plotVal = "All"
+			self.plot()
+		elif event.char == "s":
+			self.paused = True
+			self.update()
+
 
 
 	def rightClick(self, event):
-		self.paused = not self.paused
-		self.draw()
+		row, col = self.pixelToCell(event.x, event.y)
+		if self.entities[row, col] == None:
+			self.entities[row,col] = Entity(self.cellsize, gameData['InsertEntity'][1])
+			img = self.Surface.create_image(self.cellToPixel(row,col), image=self.entities[row,col].image, anchor="nw")
+			self.entities[row,col].canvasItemId = img
 
 
 g = Game()
