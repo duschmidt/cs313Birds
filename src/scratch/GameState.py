@@ -71,7 +71,7 @@ class Game(tk.Frame):
 		self.deltaT = 1 #:Time delay in ms between frame updates, not guaranteed
 		self.paused = True
 		plt.ion()
-		self.showPlot = False
+		self.showPlot = True
 		self.plotVal = "FoodMetric"
 		self.height=height
 		self.width=width
@@ -165,9 +165,8 @@ class Game(tk.Frame):
 			itr = data['iters']
 			diff = data['diffused']
 			mask = np.logical_not(seed)
-			for i in range(itr):
-				diff = rate*self.neighborCoeff*self.sumOfNeighbors(diff)*mask + seed
-			self.metrics[name]['diffused']=diff
+                        data['diffused'].fill(0)
+			data['diffused'] = diffuse.diffuse(itr, rate, data['seed'], self.obstacles)
 
 	def sumOfNeighbors(self, a):
 		new = np.zeros(a.shape)
@@ -225,7 +224,7 @@ class Game(tk.Frame):
 		else:
 			m = self.metrics[self.plotVal]['diffused']
 		ln = LogNorm()
-		plt.imshow(m,interpolation='none', norm=ln)
+		plt.imshow(m,interpolation=None, norm=ln)
 		plt.contour(m,norm=ln,colors='black', linewidth=.5)
 		plt.show()
 
@@ -279,3 +278,5 @@ class Game(tk.Frame):
 
 
 g = Game()
+while True:
+        g.update()

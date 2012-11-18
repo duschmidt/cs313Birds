@@ -50,15 +50,14 @@ int **intMatrixToCArrayPtrs(PyArrayObject *arrayin, int numCols, int numRows)  {
 /*
  * Diffuse a 2d numpy array using the given number of iterations, rate,
  * metric array and obstacle array.
- 
+ v
  * Usage: newMetricArray = diffuse(int numIterations, float rate,
  *                                 2dNpAry metricArray, 2dNpAry obstacleAry)
  */
 static PyObject *diffuse(PyObject *self, PyObject *args) {
     PyArrayObject *metricArray, *obstacleArray, *resultArray;
     double rate;
-    double **cMetricArray, **cResultArray;
-    int **cObstacleArray;
+    double **cMetricArray, **cResultArray, **cObstacleArray;
     int numIterations, i, left, right, up, down, col, row, numCols, numRows;
     int dimensions[2];
 
@@ -75,7 +74,7 @@ static PyObject *diffuse(PyObject *self, PyObject *args) {
     dimensions[1] = numRows;
     resultArray = (PyArrayObject *)PyArray_FromDims(2, dimensions, NPY_DOUBLE);
     cMetricArray = doubleMatrixToCArrayPtrs(metricArray, numCols, numRows);
-    cObstacleArray = intMatrixToCArrayPtrs(obstacleArray, numCols, numRows);
+    cObstacleArray = doubleMatrixToCArrayPtrs(obstacleArray, numCols, numRows);
     cResultArray = doubleMatrixToCArrayPtrs(resultArray, numCols, numRows);
 
     // copy metric array into result array
