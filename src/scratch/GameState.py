@@ -13,61 +13,33 @@ moves = [(-1,-1), (-1,0), (-1,1),
 noneNeighborhood = np.empty((3,3),dtype=object)
 
 
-gameData = {
- 'Metrics':{
- 			'FoodMetric':{'rate':0.9,'iters':30},
-		    'BirdMetric':{'rate':0.9,'iters':30},
-		    'HawkMetric':{'rate':0.9,'iters':30}
-		   },
- 'Entities':{
-			'Food':{ 'Eats':[],
-					 'Weights':{},
-					 'MapChar':'F',
-					 'Image':'apple.png',
-					 'Affects':{'FoodMetric':1},
-					 'Moves':False
-					},
-			'Bird':{ 'Eats':['Food'],
-					 'Weights':{
-					 			'FoodMetric':1,
-			   					'BirdMetric':0,
-			   					'HawkMetric':0
-			   					},
-					 'MapChar':'B',
-					 'Image':'bird.png',
-					 'Affects':{'BirdMetric':1},
-					 'Moves':True
-					},
-			'Hawk':{ 'Eats':['Bird', 'Food'],
-					 'Weights':{
-					 			'FoodMetric':0.5,
-			   					'BirdMetric':1,
-			   					'HawkMetric':0
-			   					},
-					 'MapChar':'H',
-					 'Image':'hawk.png',
-					 'Affects':{'HawkMetric':1},
-					 'Moves':True
-					}
-			},
- 'InsertEntity':['Food','Bird']
-}
+gameData = None
 
 class Entity():
+	"""This class represents a game entity which can interact with environment metrics and other entities"""
 	def __init__(self, size, name):
-		self.alive = True
-		self.name = name
-		self.canvasItemId = -1
-		self.skill = 10
-		im = Image.open(gameData['Entities'][self.name]['Image'])
+		"""
+			This constructor builds an entity
+
+			@param size: a two tuple of the form (height, width) which specifies the size of this entities icon on the game map
+			@param name: A string value indicating the type of entitiy.  Must be a key in the gameData['Entities'] dictionary
+		"""
+		self.alive = True #a boolean to indicate whether this entity is alive
+		self.name = name #a name for the type of entity, used as a key into the game data structure
+		self.canvasItemId = -1 #the integer identifier of a tkinter canvas item corresponding to this entity
+		self.skill = 10 #a general metric for the skill level of an entity
+
+		#Load the image file for this entity
+		im = Image.open(gameData['Entities'][self.name]['Image']) 
 		im = im.resize(size)
 		self.image = ImageTk.PhotoImage(image=im)
+
 	def getMove(self, neighborhood):
 		if not gameData['Entities'][self.name]['Moves']:
 			return(0,0)
 
 		a = np.zeros((3,3))
-		
+
 		for k, v in gameData['Entities'][self.name]['Weights'].items():
 			a += v*neighborhood[k]
 
@@ -79,7 +51,7 @@ class Entity():
 		coords = np.nonzero(neighborhood['entities'])
 		for row, col in zip(coords[0], coords[1]):
 			if neighborhood['entities'][row,col].name in gameData['Entities'][self.name]['Eats']:
-				#self.skill += neighborhood['entities'][row,col].skill
+				self.skill += neighborhood['entities'][row,col].skill
 				neighborhood['entities'][row,col] = None
 				move = (row-1,col-1)
 
@@ -97,13 +69,13 @@ class Game(tk.Frame):
 		tk.Frame.__init__(self, master)
 		self.master = master
 		self.deltaT = 1 #:Time delay in ms between frame updates, not guaranteed
-		self.paused = False
+		self.paused = True
 		plt.ion()
 		self.showPlot = False
 		self.plotVal = "FoodMetric"
 		self.height=height
 		self.width=width
-		self.loadMap()
+		self.loadMap(mapFile = "map2.map")
 		self.createWidgets()
 		self.pack()
 		self.initEntities()
@@ -121,9 +93,16 @@ class Game(tk.Frame):
 		self.Surface.pack()
 
 	def loadMap(self, mapFile='map1.map'):
+		global gameData
+		dataFile = mapFile.replace('.map','.data')
+		f = open(dataFile)
+		gameData = eval(f.read())
+		f.close()
+
 		entityIDMapping = {}
 		for k, v in gameData['Entities'].items():
 			entityIDMapping[v['MapChar']] = k
+		
 
 		gameMap = np.loadtxt(mapFile,dtype='c')
 		self.shape = gameMap.shape
@@ -252,10 +231,13 @@ class Game(tk.Frame):
 
 	def leftClick(self, event):
 		row, col = self.pixelToCell(event.x, event.y)
-		if self.entities[row, col] == None:
-			self.entities[row,col] = Entity(self.cellsize, gameData['InsertEntity'][0])
+		if self.entities[row, col] == None and gameData['InsertEntity'][0]['count'] > 0:
+			self.entities[row,col] = Entity(self.cellsize, gameData['InsertEntity'][0]['entity'])
 			img = self.Surface.create_image(self.cellToPixel(row,col), image=self.entities[row,col].image, anchor="nw")
 			self.entities[row,col].canvasItemId = img
+			gameData['InsertEntity'][0]['count'] -= 1
+			if gameData['InsertEntity'][0]['count'] == 0:
+					print("Out of %s"%gameData['InsertEntity'][0]['entity'])
 				
 	def keyPress(self, event):
 		if event.char == "p":
@@ -286,10 +268,14 @@ class Game(tk.Frame):
 
 	def rightClick(self, event):
 		row, col = self.pixelToCell(event.x, event.y)
-		if self.entities[row, col] == None:
-			self.entities[row,col] = Entity(self.cellsize, gameData['InsertEntity'][1])
+		if self.entities[row, col] == None and gameData['InsertEntity'][1]['count'] > 0:
+			self.entities[row,col] = Entity(self.cellsize, gameData['InsertEntity'][1]['entity'])
 			img = self.Surface.create_image(self.cellToPixel(row,col), image=self.entities[row,col].image, anchor="nw")
 			self.entities[row,col].canvasItemId = img
+			gameData['InsertEntity'][1]['count'] -= 1
+			if gameData['InsertEntity'][1]['count'] == 0:
+				print("Out of %s"%gameData['InsertEntity'][1]['entity'])
+
 
 
 g = Game()
