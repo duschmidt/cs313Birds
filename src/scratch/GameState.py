@@ -11,8 +11,6 @@ moves = [(-1,-1), (-1,0), (-1,1),
 		 (0, -1),(0,0),(0,1),
 		 (1, -1),(1,0),(1,1)]
 noneNeighborhood = np.empty((3,3),dtype=object)
-
-
 gameData = None
 
 class Entity():
@@ -44,9 +42,9 @@ class Entity():
 			a += v*neighborhood[k]
 
 		a *= neighborhood['obstacles']
-		a *= np.equal(noneNeighborhood,neighborhood['entities'])
+                # we can have negative values, so 0 will be the max, which will generate a random move
+		#a *= np.equal(noneNeighborhood,neighborhood['entities'])
 		maxAt = np.argmax(a)
-
 
 		coords = np.nonzero(neighborhood['entities'])
 		for row, col in zip(coords[0], coords[1]):
@@ -115,7 +113,6 @@ class Game(tk.Frame):
 				if gameMap[row,col] == 'O':
 					self.obstacles[row,col] = 0
 				elif gameMap[row,col] != '.':
-
 					self.entities[row,col] = Entity(self.cellsize, entityIDMapping[gameMap[row,col]])
 
 	def cellToPixel(self, row, col):
@@ -165,7 +162,6 @@ class Game(tk.Frame):
 			itr = data['iters']
 			diff = data['diffused']
 			mask = np.logical_not(seed)
-                        data['diffused'].fill(0)
 			data['diffused'] = diffuse.diffuse(itr, rate, data['seed'], self.obstacles)
 
 	def sumOfNeighbors(self, a):
@@ -188,7 +184,7 @@ class Game(tk.Frame):
 		self.diffuseMetrics()
 		coords = np.nonzero(self.entities)
 		for row, col in zip(coords[0], coords[1]):
-			if self.entities[row,col] == None or not self.entities[row,col].alive :
+			if self.entities[row,col] == None or not self.entities[row,col].alive:
 				continue
 			n = self.getNeighborhood(row,col)
 			move = self.entities[row,col].getMove(n)
@@ -240,6 +236,7 @@ class Game(tk.Frame):
 				
 	def keyPress(self, event):
 		if event.char == "p":
+                        self.update()
 			self.paused = not self.paused
 			if not self.paused:
 				self.update()
@@ -263,8 +260,6 @@ class Game(tk.Frame):
 			self.paused = True
 			self.update()
 
-
-
 	def rightClick(self, event):
 		row, col = self.pixelToCell(event.x, event.y)
 		if self.entities[row, col] == None and gameData['InsertEntity'][1]['count'] > 0:
@@ -274,8 +269,6 @@ class Game(tk.Frame):
 			gameData['InsertEntity'][1]['count'] -= 1
 			if gameData['InsertEntity'][1]['count'] == 0:
 				print("Out of %s"%gameData['InsertEntity'][1]['entity'])
-
-
 
 g = Game()
 while True:

@@ -1,8 +1,8 @@
 {
  'Metrics':{
- 			'FoodMetric':{'rate':0.1,'iters':500},
-		    'BirdMetric':{'rate':0.1,'iters':500},
-		    'HawkMetric':{'rate':0.1,'iters':500}
+ 			'FoodMetric':{'rate':0.1,'iters':200},
+		    'BirdMetric':{'rate':0.1,'iters':200},
+		    'HawkMetric':{'rate':0.1,'iters':200}
 		   },
  'Entities':{
 			'Food':{ 'Eats':[],
@@ -16,16 +16,16 @@
 					 'Weights':{
 					 			'FoodMetric':1,
 			   					'BirdMetric':0,
-			   					'HawkMetric':0
+			   					'HawkMetric':-.01
 			   					},
 					 'MapChar':'B',
 					 'Image':'bird.png',
 					 'Affects':{'BirdMetric':1},
 					 'Moves':True
 					},
-			'Hawk':{ 'Eats':['Bird', 'Food'],
+			'Hawk':{ 'Eats':['Bird'],
 					 'Weights':{
-					 			'FoodMetric':0.5,
+					 			'FoodMetric':0,
 			   					'BirdMetric':1,
 			   					'HawkMetric':0
 			   					},
