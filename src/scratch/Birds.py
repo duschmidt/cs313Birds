@@ -92,6 +92,7 @@ class Game(tk.Frame):
 		self.draw()
 
 	def createWidgets(self):
+		"""Creates Tkinter UI elements"""
 		self.Surface = tk.Canvas(self, width=self.width, height=self.height, bg="#FFFFFF")
 		self.Surface.bind("<Button-1>", self.leftClick)
 		self.Surface.bind("<Button-3>", self.rightClick)
@@ -99,6 +100,8 @@ class Game(tk.Frame):
 		self.Surface.pack()
 
 	def loadMap(self, mapFile='map1.map'):
+		"""Loads a map layout from a file given by mapFile
+			@param mapFile: a string file name to a map file"""
 		global gameData
 		dataFile = 'map.data'#mapFile.replace('.map','.data')
 		f = open(dataFile)
@@ -182,19 +185,18 @@ class Game(tk.Frame):
 
 	def update(self):
 		"""Main game logic update method.  Call once per frame."""
-		if not self.paused:
-			self.seedMetrics()
-			self.diffuseMetrics()
-			coords = np.nonzero(self.entities)
-			for row, col in zip(coords[0], coords[1]):
-				if not self.entities[row,col] or not self.entities[row,col].alive:
-					continue
-				move = self.entities[row,col].getMove(self.getNeighborhood(row,col))
-				newPos = ((row+move[0])%self.entities.shape[0], (col+move[1])%self.entities.shape[1])
-				        
-				if self.obstacles[newPos] and not (self.entities[newPos] and self.entities[newPos].alive):
-					self.entities[newPos] = self.entities[row, col]
-					self.entities[row,col] = None
+		self.seedMetrics()
+		self.diffuseMetrics()
+		coords = np.nonzero(self.entities)
+		for row, col in zip(coords[0], coords[1]):
+			if not self.entities[row,col] or not self.entities[row,col].alive:
+				continue
+			move = self.entities[row,col].getMove(self.getNeighborhood(row,col))
+			newPos = ((row+move[0])%self.entities.shape[0], (col+move[1])%self.entities.shape[1])
+			        
+			if self.obstacles[newPos] and not (self.entities[newPos] and self.entities[newPos].alive):
+				self.entities[newPos] = self.entities[row, col]
+				self.entities[row,col] = None
 		self.draw()
 
 	def draw(self):
@@ -206,7 +208,8 @@ class Game(tk.Frame):
 			self.Surface.coords(item, pos)
 			self.drawText()
 		if self.showPlot: self.plot()
-		self.Surface.update()
+		if not self.paused:
+			self.Surface.update()
 
 
 	def drawText(self):
@@ -221,7 +224,7 @@ class Game(tk.Frame):
 			if self.text[i]: # create the item if it doesn't exist, otherwise set its text
 				self.Surface.itemconfig(self.text[i], text=ammoString)
 			else:
-				elf.text[i] = self.Surface.create_text(20, 20 * (i + 1), anchor=tk.W, fill='blue', text=ammoString)
+				self.text[i] = self.Surface.create_text(20, 20 * (i + 1), anchor=tk.W, fill='blue', text=ammoString)
                 
 	def plot(self):
 		"""Use matplotlib to draw pretty graphs of user-specified metric layers"""
