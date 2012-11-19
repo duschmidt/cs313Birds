@@ -1,16 +1,18 @@
+import sys
 import Tkinter as tk
 import numpy as np
 import Image
 import ImageTk
 import diffuse
 import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm, Colormap, NoNorm
+from matplotlib.colors import LogNorm, Colormap
 from random import randint
 
 moves = [(-1, -1), (-1, 0), (-1, 1),
 	 (0,  -1), (0,  0), (0,  1),
 	 (1,  -1), (1,  0), (1,  1)]
-noneNeighborhood = np.empty((3,3)) # used to avoid array instantiation in getMove()
+emptyNeighborhood = np.empty((3,3)) # used to avoid array instantiation in getMove() 	
+noneNeighborhood = np.empty((3,3),dtype=object) # used to see where entities exist in neighborhood
 
 gameData = None
 # Hotkeys for plotting and their corresponding metrics
@@ -39,14 +41,14 @@ class Entity():
 		if not gameData['Entities'][self.name]['Moves']:
                         return(0,0)
 
-		a = noneNeighborhood.copy() # copy array of zeros
+		a = emptyNeighborhood.copy() # copy array of zeros
                 
 		for k, v in gameData['Entities'][self.name]['Weights'].items():
 			a += v*neighborhood[k]
+                # -infinity value for obstacles and entities
+                a[np.where(neighborhood['Obstacles'] == 0)] = -sys.maxint
+                a[np.where(neighborhood['Entities'] != noneNeighborhood)] = -sys.maxint
 		maxAt = np.argmax(a)
-                # NOTE: not zeroing out entity or obstacle positions,
-                # because if all neighborhood pos's are < 0, 0 would be the max.
-                # disallowing overlapping entities and occupying obstacles are handled in update()
                 
 		coords = np.nonzero(neighborhood['Entities'])
 		for row, col in zip(coords[0], coords[1]):
@@ -70,7 +72,7 @@ class Game(tk.Frame):
 		tk.Frame.__init__(self, master)
 		self.master = master
 		self.deltaT = 1 #:Time delay in ms between frame updates, not guaranteed
-                self.text = [None, None]
+                self.text = [None, None] # holds Tkinter text items
 		self.paused = True
 		plt.ion()
 		self.showPlot = True
@@ -162,6 +164,7 @@ class Game(tk.Frame):
 	def getNeighborhood(self,row,col):
 		neighborhood = {}
 		neighborhood['Entities'] = self.entities[row-1:row+2, col-1:col+2]
+                neighborhood['Obstacles'] = self.obstacles[row-1:row+2, col-1:col+2]
 		for layer, data in self.metrics.items():
 			neighborhood[layer] = data['diffused'][row-1:row+2, col-1:col+2]
 		return neighborhood
@@ -200,8 +203,10 @@ class Game(tk.Frame):
                 for i in range(len(gameData['InsertEntity'])):
                         entityInfo = gameData['InsertEntity'][i]
                         count = entityInfo['count']
+                        label = entityInfo['label']
                         countString = str(count) if count > 0 else "No"
-                        ammoString = countString + " " + str(entityInfo['label']) + " left"
+                        clickString = "Left" if i == 0 else "Right"
+                        ammoString = clickString + "-Click to add " + label + ". (" + countString + " " + label + " remaining)"
                         if self.text[i]: # create the item if it doesn't exist, otherwise set its text
                                 self.Surface.itemconfig(self.text[i], text=ammoString)
                         else:
