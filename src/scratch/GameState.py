@@ -11,6 +11,7 @@ moves = [(-1, -1), (-1, 0), (-1, 1),
 	 (0,  -1), (0,  0), (0,  1),
 	 (1,  -1), (1,  0), (1,  1)]
 noneNeighborhood = np.empty((3,3)) # used to avoid array instantiation in getMove()
+
 gameData = None
 # Hotkeys for plotting and their corresponding metrics
 plotKeys = {'f':'FoodMetric', 'b':'BirdMetric', 'h':'HawkMetric', 'a':'All'};
@@ -69,6 +70,7 @@ class Game(tk.Frame):
 		tk.Frame.__init__(self, master)
 		self.master = master
 		self.deltaT = 1 #:Time delay in ms between frame updates, not guaranteed
+                self.text = [None, None]
 		self.paused = True
 		plt.ion()
 		self.showPlot = True
@@ -187,10 +189,21 @@ class Game(tk.Frame):
 			item = self.entities[row,col].canvasItemId
 			pos = self.cellToPixel(row,col)
 			self.Surface.coords(item, pos)
+                self.drawText()
 		self.Surface.update()
 		if not self.paused:
 			self.Surface.after(self.deltaT,self.update)
-		
+
+
+        def drawText(self):
+                """Draw text indicating the ammount of each Insert Entity left"""
+                for i in range(len(gameData['InsertEntity'])):
+                        ammoString = str(gameData['InsertEntity'][i]['count']) + " " + str(gameData['InsertEntity'][i]['entity']) + " left"
+                        if self.text[i]: # create the item if it doesn't exist, otherwise set its text
+                                self.Surface.itemconfig(self.text[i], text=ammoString)
+                        else:
+                                self.text[i] = self.Surface.create_text(20, 20 * (i + 1), anchor=tk.W, fill='blue', text=ammoString)
+                
 	def plot(self):
 		plt.figure(0)
 		plt.clf()
@@ -208,7 +221,7 @@ class Game(tk.Frame):
 
 	def leftClick(self, event):
 		row, col = self.pixelToCell(event.x, event.y)
-		if self.entities[row, col] == None and gameData['InsertEntity'][0]['count'] > 0:
+		if self.entities[row, col] == None and gameData['InsertEntity'][0]['entity'] > 0:
 			self.entities[row,col] = Entity(self.cellsize, gameData['InsertEntity'][0]['entity'])
 			img = self.Surface.create_image(self.cellToPixel(row,col), image=self.entities[row,col].image, anchor="nw")
 			self.entities[row,col].canvasItemId = img
