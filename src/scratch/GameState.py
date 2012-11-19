@@ -127,11 +127,13 @@ class Game(tk.Frame):
 		for row, col in zip(coords[0], coords[1]):
 			img = self.Surface.create_image(self.cellToPixel(row,col), image=self.entities[row,col].image, anchor="nw")
 			self.entities[row,col].canvasItemId = img
+		self.Surface.update()
 
 	def initObstacles(self):
 		coords = np.nonzero(np.logical_not(self.obstacles))
 		for row, col in zip(coords[0], coords[1]):
 			self.Surface.create_rectangle(self.cellToPixel(row,col), self.cellToPixel(row+1,col+1), fill="#000000")
+		self.Surface.update()
 
 	def initMetrics(self):
 		self.metrics = {}
