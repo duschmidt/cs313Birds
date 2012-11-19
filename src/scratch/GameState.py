@@ -4,7 +4,7 @@ import Image
 import ImageTk
 import diffuse
 import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm, Colormap
+from matplotlib.colors import LogNorm, Colormap, NoNorm
 from random import randint
 
 moves = [(-1, -1), (-1, 0), (-1, 1),
@@ -217,9 +217,13 @@ class Game(tk.Frame):
 				m += v['diffused']
 		else:
 			m = self.metrics[self.plotVal]['diffused']
-		ln = LogNorm()
-		plt.imshow(m, norm=ln)
-		plt.contour(m, norm=ln, colors='black', linewidth=.5)
+
+                if np.max(m) != 0:
+                        ln = LogNorm()
+                        plt.imshow(m, norm=ln)
+                        plt.contour(m, norm=ln, colors='black', linewidth=.5)
+                else:
+                        plt.imshow(m)
 		plt.show()
 				
 	def keyPress(self, event):
