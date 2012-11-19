@@ -42,17 +42,17 @@ class Entity():
 
 	def getMove(self, neighborhood):
 		if not gameData['Entities'][self.name]['Moves']:
-                        return(0,0)
+			return(0,0)
 
 		a = emptyNeighborhood.copy() # copy array of zeros
-                
+		
 		for k, v in gameData['Entities'][self.name]['Weights'].items():
 			a += v*neighborhood[k]
-                # -infinity value for obstacles and entities
-                a[np.where(neighborhood['Obstacles'] == 0)] = -sys.maxint
-                a[np.where(neighborhood['Entities'] != noneNeighborhood)] = -sys.maxint
+		# -infinity value for obstacles and entities
+		a[np.where(neighborhood['Obstacles'] == 0)] = -sys.maxint
+		a[np.where(neighborhood['Entities'] != noneNeighborhood)] = -sys.maxint
 		maxAt = np.argmax(a)
-                
+		
 		coords = np.nonzero(neighborhood['Entities'])
 		for row, col in zip(coords[0], coords[1]):
 			if neighborhood['Entities'][row,col].name in gameData['Entities'][self.name]['Eats']:
@@ -62,7 +62,7 @@ class Entity():
 
 		move = moves[maxAt]
 		if move[0] == 0 and move[1] == 0:
-                        # never just stay put.  choose random direction instead.
+			# never just stay put.  choose random direction instead.
 			move = (randint(-1,1),randint(-1,1))
 
 		return move
@@ -75,7 +75,7 @@ class Game(tk.Frame):
 		tk.Frame.__init__(self, master)
 		self.master = master
 		self.deltaT = 1 #:Time delay in ms between frame updates, not guaranteed
-                self.text = [None, None] # holds Tkinter text items
+		self.text = [None, None] # holds Tkinter text items
 		self.paused = False
 		plt.ion()
 		self.showPlot = True
@@ -130,8 +130,8 @@ class Game(tk.Frame):
 		return (int(y*self.shape[0]/float(self.height)),int(x*self.shape[1]/float(self.width)))
 	
 	def initEntities(self):
-                """Initialize all entities that are encoded in the map file.
-                NOTE: use loadMap() before calling"""
+		"""Initialize all entities that are encoded in the map file.
+		NOTE: use loadMap() before calling"""
 		coords = np.nonzero(self.entities)
 		for row, col in zip(coords[0], coords[1]):
 			img = self.Surface.create_image(self.cellToPixel(row,col), image=self.entities[row,col].image, anchor="nw")
@@ -139,16 +139,16 @@ class Game(tk.Frame):
 		self.Surface.update()
 
 	def initObstacles(self):
-                """Initialize all obstacles that are encoded in the map file.
-                NOTE: use loadMap() before calling"""
+		"""Initialize all obstacles that are encoded in the map file.
+		NOTE: use loadMap() before calling"""
 		coords = np.nonzero(np.logical_not(self.obstacles))
 		for row, col in zip(coords[0], coords[1]):
 			self.Surface.create_rectangle(self.cellToPixel(row,col), self.cellToPixel(row+1,col+1), fill="#000000")
 		self.Surface.update()
 
 	def initMetrics(self):
-                """Initialize metric seeds and diffusion arrays to zeros.
-                NOTE: use loadMap() before calling"""                
+		"""Initialize metric seeds and diffusion arrays to zeros.
+		NOTE: use loadMap() before calling"""		
 		self.metrics = {}
 		for k,v in gameData['Metrics'].items():
 			self.metrics[k] = v
@@ -156,7 +156,7 @@ class Game(tk.Frame):
 			self.metrics[k]['diffused'] = np.zeros(self.shape)
 		
 	def seedMetrics(self):
-                """For all entities, set their positions in their seed array to their 'Affects' values (specified in data file)"""
+		"""For all entities, set their positions in their seed array to their 'Affects' values (specified in data file)"""
 		for name, data in self.metrics.items():
 			self.metrics[name]['seed'].fill(0)
 		coords = np.nonzero(self.entities)
@@ -166,64 +166,65 @@ class Game(tk.Frame):
 				self.metrics[k]['seed'][row,col] = v
 
 	def diffuseMetrics(self):
-                """Diffuse each metric layer"""
+		"""Diffuse each metric layer"""
 		for name, data in self.metrics.items():
-                        # call C diffusion extension
+			# call C diffusion extension
 			data['diffused'] = diffuse.diffuse(data['iters'], data['rate'], data['seed'], self.obstacles)
 
 	def getNeighborhood(self,row,col):
-                """Returns a 3 X 3 matrix centered around row, col with all metric diffusion values"""
+		"""Returns a 3 X 3 matrix centered around row, col with all metric diffusion values"""
 		neighborhood = {}
 		neighborhood['Entities'] = self.entities[row-1:row+2, col-1:col+2]
-                neighborhood['Obstacles'] = self.obstacles[row-1:row+2, col-1:col+2]
+		neighborhood['Obstacles'] = self.obstacles[row-1:row+2, col-1:col+2]
 		for layer, data in self.metrics.items():
 			neighborhood[layer] = data['diffused'][row-1:row+2, col-1:col+2]
 		return neighborhood
 
 	def update(self):
-                """Main game logic update method.  Call once per frame."""
-                if not self.paused:
-                        self.seedMetrics()
-                        self.diffuseMetrics()
-                        coords = np.nonzero(self.entities)
-                        for row, col in zip(coords[0], coords[1]):
-                                if not self.entities[row,col] or not self.entities[row,col].alive:
-                                        continue
-                                move = self.entities[row,col].getMove(self.getNeighborhood(row,col))
-                                newPos = ((row+move[0])%self.entities.shape[0], (col+move[1])%self.entities.shape[1])
-                                        
-                                if self.obstacles[newPos] and not (self.entities[newPos] and self.entities[newPos].alive):
-                                        self.entities[newPos] = self.entities[row, col]
-                                        self.entities[row,col] = None
-                self.draw()
+		"""Main game logic update method.  Call once per frame."""
+		if not self.paused:
+			self.seedMetrics()
+			self.diffuseMetrics()
+			coords = np.nonzero(self.entities)
+			for row, col in zip(coords[0], coords[1]):
+				if not self.entities[row,col] or not self.entities[row,col].alive:
+					continue
+				move = self.entities[row,col].getMove(self.getNeighborhood(row,col))
+				newPos = ((row+move[0])%self.entities.shape[0], (col+move[1])%self.entities.shape[1])
+				        
+				if self.obstacles[newPos] and not (self.entities[newPos] and self.entities[newPos].alive):
+					self.entities[newPos] = self.entities[row, col]
+					self.entities[row,col] = None
+		self.draw()
 
 	def draw(self):
-                """Takes care of all visual rendering/updating"""
+		"""Takes care of all visual rendering/updating"""
 		coords = np.nonzero(self.entities)
 		for row, col in zip(coords[0], coords[1]):
 			item = self.entities[row,col].canvasItemId
 			pos = self.cellToPixel(row,col)
 			self.Surface.coords(item, pos)
-                self.drawText()
+			self.drawText()
 		if self.showPlot: self.plot()
 		self.Surface.update()
-                
-        def drawText(self):
-                """Draw text indicating the ammount of each Insert Entity left"""
-                for i in range(len(gameData['InsertEntity'])):
-                        entityInfo = gameData['InsertEntity'][i]
-                        count = entityInfo['count']
-                        label = entityInfo['label']
-                        countString = str(count) if count > 0 else "No"
-                        clickString = "Left" if i == 0 else "Right"
-                        ammoString = clickString + "-Click to add " + label + ". (" + countString + " " + label + " remaining)"
-                        if self.text[i]: # create the item if it doesn't exist, otherwise set its text
-                                self.Surface.itemconfig(self.text[i], text=ammoString)
-                        else:
-                                self.text[i] = self.Surface.create_text(20, 20 * (i + 1), anchor=tk.W, fill='blue', text=ammoString)
+
+
+	def drawText(self):
+		"""Draw text indicating the ammount of each Insert Entity left"""
+		for i in range(len(gameData['InsertEntity'])):
+			entityInfo = gameData['InsertEntity'][i]
+			count = entityInfo['count']
+			label = entityInfo['label']
+			countString = str(count) if count > 0 else "No"
+			clickString = "Left" if i == 0 else "Right"
+			ammoString = clickString + "-Click to add " + label + ". (" + countString + " " + label + " remaining)"
+			if self.text[i]: # create the item if it doesn't exist, otherwise set its text
+				self.Surface.itemconfig(self.text[i], text=ammoString)
+			else:
+				elf.text[i] = self.Surface.create_text(20, 20 * (i + 1), anchor=tk.W, fill='blue', text=ammoString)
                 
 	def plot(self):
-                """Use matplotlib to draw pretty graphs of user-specified metric layers"""
+		"""Use matplotlib to draw pretty graphs of user-specified metric layers"""
 		plt.figure(0)
 		plt.clf()
 		plt.suptitle(self.plotVal)
@@ -234,29 +235,29 @@ class Game(tk.Frame):
 		else:
 			m = self.metrics[self.plotVal]['diffused']
 
-                if np.max(m) != 0:
-                        ln = LogNorm()
-                        plt.imshow(m, norm=ln)
-                        plt.contour(m, norm=ln, colors='black', linewidth=.5)
-                else:
-                        plt.imshow(m)
+			if np.max(m) != 0:
+				ln = LogNorm()
+				plt.imshow(m, norm=ln)
+				plt.contour(m, norm=ln, colors='black', linewidth=.5)
+			else:
+				plt.imshow(m)
 		plt.show()
 				
         def click(self, event, insertId):
-                """This function is called from click event handlers, with insertId based on left/right click.
-                Inserts the appropriate entity, if valid."""
+		"""This function is called from click event handlers, with insertId based on left/right click.
+		Inserts the appropriate entity, if valid."""
 		row, col = self.pixelToCell(event.x, event.y)
-                entityInfo = gameData['InsertEntity'][insertId]
-                # if the position we clicked on is not an obstacle or another entity,
-                # and we have 'ammo' for that entity remaining, add the entity and decrease the ammo
+		entityInfo = gameData['InsertEntity'][insertId]
+		# if the position we clicked on is not an obstacle or another entity,
+		# and we have 'ammo' for that entity remaining, add the entity and decrease the ammo
 		if self.obstacles[row, col] and self.entities[row, col] == None and entityInfo['count'] > 0:
-                        self.entities[row,col] = Entity(self.cellsize, entityInfo['entity'])
+			self.entities[row,col] = Entity(self.cellsize, entityInfo['entity'])
 			img = self.Surface.create_image(self.cellToPixel(row,col), image=self.entities[row,col].image, anchor="nw")
 			self.entities[row,col].canvasItemId = img
 			entityInfo['count'] -= 1
 
 	def keyPress(self, event):
-                """Handles keypress events"""
+		"""Handles keypress events"""
 		if event.char == "p":
 			self.paused = not self.paused
 		elif event.char == "t":
@@ -265,18 +266,18 @@ class Game(tk.Frame):
 			self.paused = True
 			self.update()
 		elif event.char in plotKeys:
-                        self.showPlot = True
-                        self.plotVal = plotKeys[event.char]
-                        self.plot()
+			self.showPlot = True
+			self.plotVal = plotKeys[event.char]
+			self.plot()
                         
 	def leftClick(self, event):
-                """Handles left click events"""
-                self.click(event, 0)
-                
+		"""Handles left click events"""
+		self.click(event, 0)
+		
 	def rightClick(self, event):
-                """Handles right click events"""
-                self.click(event, 1)
+		"""Handles right click events"""
+		self.click(event, 1)
 
 g = Game()
 while True:
-        g.update()
+	g.update()
