@@ -13,7 +13,6 @@ moves = [(-1, -1), (-1, 0), (-1, 1),
 	 (1,  -1), (1,  0), (1,  1)]
 emptyNeighborhood = np.empty((3,3)) # used to avoid array instantiation in getMove() 	
 noneNeighborhood = np.empty((3,3),dtype=object) # used to see where entities exist in neighborhood
-
 gameData = None
 # Hotkeys for plotting and their corresponding metrics
 plotKeys = {'f':'FoodMetric', 'b':'BirdMetric', 'h':'HawkMetric', 'a':'All'};
@@ -68,14 +67,14 @@ class Entity():
 		return gameData['Entities'][self.name]['Affects']
 
 class Game(tk.Frame):
-	def __init__(self, master=tk.Tk(), height=900, width=900):
+	def __init__(self, master=tk.Tk(), height=700, width=700):
 		tk.Frame.__init__(self, master)
 		self.master = master
 		self.deltaT = 1 #:Time delay in ms between frame updates, not guaranteed
                 self.text = [None, None] # holds Tkinter text items
 		self.paused = True
 		plt.ion()
-		self.showPlot = True
+		self.showPlot = False
 		self.plotVal = "FoodMetric"
 		self.height=height
 		self.width=width
@@ -127,6 +126,8 @@ class Game(tk.Frame):
 		return (int(y*self.shape[0]/float(self.height)),int(x*self.shape[1]/float(self.width)))
 	
 	def initEntities(self):
+                """Initialize all entities that are encoded in the map file.
+                NOTE: use loadMap() before calling"""
 		coords = np.nonzero(self.entities)
 		for row, col in zip(coords[0], coords[1]):
 			img = self.Surface.create_image(self.cellToPixel(row,col), image=self.entities[row,col].image, anchor="nw")
@@ -134,12 +135,16 @@ class Game(tk.Frame):
 		self.Surface.update()
 
 	def initObstacles(self):
+                """Initialize all obstacles that are encoded in the map file.
+                NOTE: use loadMap() before calling"""
 		coords = np.nonzero(np.logical_not(self.obstacles))
 		for row, col in zip(coords[0], coords[1]):
 			self.Surface.create_rectangle(self.cellToPixel(row,col), self.cellToPixel(row+1,col+1), fill="#000000")
 		self.Surface.update()
 
 	def initMetrics(self):
+                """Initialize metric seeds and diffusion arrays to zeros.
+                NOTE: use loadMap() before calling"""                
 		self.metrics = {}
 		for k,v in gameData['Metrics'].items():
 			self.metrics[k] = v
@@ -147,6 +152,7 @@ class Game(tk.Frame):
 			self.metrics[k]['diffused'] = np.zeros(self.shape)
 		
 	def seedMetrics(self):
+                """For all entities, set their positions in their seed array to their 'Affects' values (specified in data file)"""
 		for name, data in self.metrics.items():
 			self.metrics[name]['seed'].fill(0)
 		coords = np.nonzero(self.entities)
@@ -162,6 +168,7 @@ class Game(tk.Frame):
 			data['diffused'] = diffuse.diffuse(data['iters'], data['rate'], data['seed'], self.obstacles)
 
 	def getNeighborhood(self,row,col):
+                """Returns a 3 X 3 matrix centered around row, col with all metric diffusion values"""
 		neighborhood = {}
 		neighborhood['Entities'] = self.entities[row-1:row+2, col-1:col+2]
                 neighborhood['Obstacles'] = self.obstacles[row-1:row+2, col-1:col+2]
@@ -170,34 +177,33 @@ class Game(tk.Frame):
 		return neighborhood
 
 	def update(self):
-		self.seedMetrics()
-		self.diffuseMetrics()
-		coords = np.nonzero(self.entities)
-		for row, col in zip(coords[0], coords[1]):
-			if not self.entities[row,col] or not self.entities[row,col].alive:
-				continue
-			move = self.entities[row,col].getMove(self.getNeighborhood(row,col))
-			newPos = ((row+move[0])%self.entities.shape[0], (col+move[1])%self.entities.shape[1])
-			
-			if self.obstacles[newPos] and not (self.entities[newPos] and self.entities[newPos].alive):
-				self.entities[newPos] = self.entities[row, col]
-				self.entities[row,col] = None
-
-		if self.showPlot: self.plot()
-		self.draw()
+                """Main game logic update method.  Call once per frame."""
+                if not self.paused:
+                        self.seedMetrics()
+                        self.diffuseMetrics()
+                        coords = np.nonzero(self.entities)
+                        for row, col in zip(coords[0], coords[1]):
+                                if not self.entities[row,col] or not self.entities[row,col].alive:
+                                        continue
+                                move = self.entities[row,col].getMove(self.getNeighborhood(row,col))
+                                newPos = ((row+move[0])%self.entities.shape[0], (col+move[1])%self.entities.shape[1])
+                                        
+                                if self.obstacles[newPos] and not (self.entities[newPos] and self.entities[newPos].alive):
+                                        self.entities[newPos] = self.entities[row, col]
+                                        self.entities[row,col] = None
+                self.draw()
 
 	def draw(self):
+                """Takes care of all visual rendering/updating"""
 		coords = np.nonzero(self.entities)
 		for row, col in zip(coords[0], coords[1]):
 			item = self.entities[row,col].canvasItemId
 			pos = self.cellToPixel(row,col)
 			self.Surface.coords(item, pos)
                 self.drawText()
+		if self.showPlot: self.plot()
 		self.Surface.update()
-		if not self.paused:
-			self.Surface.after(self.deltaT,self.update)
-
-
+                
         def drawText(self):
                 """Draw text indicating the ammount of each Insert Entity left"""
                 for i in range(len(gameData['InsertEntity'])):
@@ -213,6 +219,7 @@ class Game(tk.Frame):
                                 self.text[i] = self.Surface.create_text(20, 20 * (i + 1), anchor=tk.W, fill='blue', text=ammoString)
                 
 	def plot(self):
+                """Use matplotlib to draw pretty graphs of user-specified metric layers"""
 		plt.figure(0)
 		plt.clf()
 		plt.suptitle(self.plotVal)
@@ -231,34 +238,39 @@ class Game(tk.Frame):
                         plt.imshow(m)
 		plt.show()
 				
+        def click(self, event, insertId):
+                """This function is called from click event handlers, with insertId based on left/right click.
+                Inserts the appropriate entity, if valid."""
+		row, col = self.pixelToCell(event.x, event.y)
+                entityInfo = gameData['InsertEntity'][insertId]
+                # if the position we clicked on is not an obstacle or another entity,
+                # and we have 'ammo' for that entity remaining, add the entity and decrease the ammo
+		if self.obstacles[row, col] and self.entities[row, col] == None and entityInfo['count'] > 0:
+                        self.entities[row,col] = Entity(self.cellsize, entityInfo['entity'])
+			img = self.Surface.create_image(self.cellToPixel(row,col), image=self.entities[row,col].image, anchor="nw")
+			self.entities[row,col].canvasItemId = img
+			entityInfo['count'] -= 1
+
 	def keyPress(self, event):
+                """Handles keypress events"""
 		if event.char == "p":
 			self.paused = not self.paused
-			if not self.paused:
-				self.update()
 		elif event.char == "t":
 			self.showPlot = not self.showPlot
-			if self.showPlot:
-				self.plot()
 		elif event.char == "s":
 			self.paused = True
 			self.update()
 		elif event.char in plotKeys:
+                        self.showPlot = True
                         self.plotVal = plotKeys[event.char]
-			self.plot()
-
-        def click(self, event, insertId):
-		row, col = self.pixelToCell(event.x, event.y)
-		if self.obstacles[row, col] and self.entities[row, col] == None and gameData['InsertEntity'][insertId]['count'] > 0:
-                        self.entities[row,col] = Entity(self.cellsize, gameData['InsertEntity'][insertId]['entity'])
-			img = self.Surface.create_image(self.cellToPixel(row,col), image=self.entities[row,col].image, anchor="nw")
-			self.entities[row,col].canvasItemId = img
-			gameData['InsertEntity'][insertId]['count'] -= 1
-                
+                        self.plot()
+                        
 	def leftClick(self, event):
+                """Handles left click events"""
                 self.click(event, 0)
                 
 	def rightClick(self, event):
+                """Handles right click events"""
                 self.click(event, 1)
 
 g = Game()
