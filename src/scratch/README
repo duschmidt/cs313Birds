@@ -1,4 +1,5 @@
-
+To run, use:
+➜ python Birds.py
 
 Left click places food
 Right click pauses the game
