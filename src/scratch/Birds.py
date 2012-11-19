@@ -41,33 +41,47 @@ class Entity():
 		self.image = ImageTk.PhotoImage(image=im)
 
 	def getMove(self, neighborhood):
+		"""this method accepts a dictionary of parallel 3x3 numpy arrays which represent the environment around this entity and 
+		   returns a move decision as a relative move in x/y cell coordinates.  IE move up and left is (-1,-1), down and right is (1,1)"""
+		
 		if not gameData['Entities'][self.name]['Moves']:
+			#non moving entity, stay put
 			return(0,0)
 
 		a = emptyNeighborhood.copy() # copy array of zeros
-		
+
+		# loop over the layers that this entity uses to make it's decision
 		for k, v in gameData['Entities'][self.name]['Weights'].items():
 			a += v*neighborhood[k]
-		# -infinity value for obstacles and entities
+
+		# assign obstacle cells and occupied cells to largest minimum value to exclude from decision
 		a[np.where(neighborhood['Obstacles'] == 0)] = -sys.maxint
 		a[np.where(neighborhood['Entities'] != noneNeighborhood)] = -sys.maxint
+
+		# find the maximum valued cell after applying weights and obstacle/entity masks
 		maxAt = np.argmax(a)
-		
+
+		# find occupied cells
 		coords = np.nonzero(neighborhood['Entities'])
-		for row, col in zip(coords[0], coords[1]):
+
+		for row, col in zip(coords[0], coords[1]):#loop over occupied cells
+			#check if there is an edible neighbor
 			if neighborhood['Entities'][row,col].name in gameData['Entities'][self.name]['Eats']:
+				#eath the neighbor
 				self.skill += neighborhood['Entities'][row,col].skill
 				neighborhood['Entities'][row,col] = None
-				move = (row-1,col-1)
+				move = (row-1,col-1) #move to the cell of the eaten entity
+				return move #return the move
 
-		move = moves[maxAt]
+		move = moves[maxAt] #find the move to the cell with max value
 		if move[0] == 0 and move[1] == 0:
-			# never just stay put.  choose random direction instead.
+			# moving entities never just stay put.  choose random direction instead.
 			move = (randint(-1,1),randint(-1,1))
 
 		return move
 
 	def getMetrics(self):
+		"""This method returns a dictionary keyed by metric layers with numeric values that this entity should place in into the given metric layer"""
 		return gameData['Entities'][self.name]['Affects']
 
 class Game(tk.Frame):
@@ -102,11 +116,19 @@ class Game(tk.Frame):
 	def loadMap(self, mapFile='map1.map'):
 		"""Loads a map layout from a file given by mapFile
 			@param mapFile: a string file name to a map file"""
-		global gameData
-		dataFile = 'map.data'#mapFile.replace('.map','.data')
-		f = open(dataFile)
-		gameData = eval(f.read())
-		f.close()
+
+		try: #attempt to load a gameDataFile specific to this map
+			global gameData
+			dataFile = mapFile.replace('.map','.data')
+			f = open(dataFile)
+			gameData = eval(f.read())
+			f.close()
+		except: #load the default gameData file
+			global gameData
+			dataFile = "map.data"
+			f = open(dataFile)
+			gameData = eval(f.read())
+			f.close()
 
 		entityIDMapping = {}
 		for k, v in gameData['Entities'].items():
@@ -193,7 +215,7 @@ class Game(tk.Frame):
 				continue
 			move = self.entities[row,col].getMove(self.getNeighborhood(row,col))
 			newPos = ((row+move[0])%self.entities.shape[0], (col+move[1])%self.entities.shape[1])
-			        
+				
 			if self.obstacles[newPos] and not (self.entities[newPos] and self.entities[newPos].alive):
 				self.entities[newPos] = self.entities[row, col]
 				self.entities[row,col] = None
@@ -207,9 +229,10 @@ class Game(tk.Frame):
 			pos = self.cellToPixel(row,col)
 			self.Surface.coords(item, pos)
 			self.drawText()
+		self.Surface.update()
 		if self.showPlot: self.plot()
 		if not self.paused:
-			self.Surface.update()
+			self.Surface.after(self.deltaT,self.update)
 
 
 	def drawText(self):
@@ -225,7 +248,7 @@ class Game(tk.Frame):
 				self.Surface.itemconfig(self.text[i], text=ammoString)
 			else:
 				self.text[i] = self.Surface.create_text(20, 20 * (i + 1), anchor=tk.W, fill='blue', text=ammoString)
-                
+		
 	def plot(self):
 		"""Use matplotlib to draw pretty graphs of user-specified metric layers"""
 		plt.figure(0)
@@ -240,13 +263,13 @@ class Game(tk.Frame):
 
 			if np.max(m) != 0:
 				ln = LogNorm()
-				plt.imshow(m, norm=ln)
+				plt.imshow(m, interpolation='None', norm=ln)
 				plt.contour(m, norm=ln, colors='black', linewidth=.5)
 			else:
 				plt.imshow(m)
 		plt.show()
 				
-        def click(self, event, insertId):
+	def click(self, event, insertId):
 		"""This function is called from click event handlers, with insertId based on left/right click.
 		Inserts the appropriate entity, if valid."""
 		row, col = self.pixelToCell(event.x, event.y)
@@ -272,7 +295,7 @@ class Game(tk.Frame):
 			self.showPlot = True
 			self.plotVal = plotKeys[event.char]
 			self.plot()
-                        
+			
 	def leftClick(self, event):
 		"""Handles left click events"""
 		self.click(event, 0)
@@ -282,5 +305,3 @@ class Game(tk.Frame):
 		self.click(event, 1)
 
 g = Game()
-while True:
-	g.update()
