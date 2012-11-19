@@ -72,9 +72,9 @@ class Game(tk.Frame):
 		self.master = master
 		self.deltaT = 1 #:Time delay in ms between frame updates, not guaranteed
                 self.text = [None, None] # holds Tkinter text items
-		self.paused = True
+		self.paused = False
 		plt.ion()
-		self.showPlot = False
+		self.showPlot = True
 		self.plotVal = "FoodMetric"
 		self.height=height
 		self.width=width
