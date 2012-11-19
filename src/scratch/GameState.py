@@ -7,11 +7,13 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm, Colormap
 from random import randint
 
-moves = [(-1,-1), (-1,0), (-1,1),
-		 (0, -1),(0,0),(0,1),
-		 (1, -1),(1,0),(1,1)]
-noneNeighborhood = np.empty((3,3),dtype=object)
+moves = [(-1, -1), (-1, 0), (-1, 1),
+	 (0,  -1), (0,  0), (0,  1),
+	 (1,  -1), (1,  0), (1,  1)]
+noneNeighborhood = np.empty((3,3)) # used to avoid array instantiation in getMove()
 gameData = None
+# Hotkeys for plotting and their corresponding metrics
+plotKeys = {'f':'FoodMetric', 'b':'BirdMetric', 'h':'HawkMetric', 'a':'All'};
 
 class Entity():
 	"""This class represents a game entity which can interact with environment metrics and other entities"""
@@ -34,27 +36,27 @@ class Entity():
 
 	def getMove(self, neighborhood):
 		if not gameData['Entities'][self.name]['Moves']:
-			return(0,0)
+                        return(0,0)
 
-		a = np.zeros((3,3))
-
+		a = noneNeighborhood.copy() # copy array of zeros
+                
 		for k, v in gameData['Entities'][self.name]['Weights'].items():
 			a += v*neighborhood[k]
-
-		a *= neighborhood['obstacles']
-                # we can have negative values, so 0 will be the max, which will generate a random move
-		#a *= np.equal(noneNeighborhood,neighborhood['entities'])
 		maxAt = np.argmax(a)
-
-		coords = np.nonzero(neighborhood['entities'])
+                # NOTE: not zeroing out entity or obstacle positions,
+                # because if all neighborhood pos's are < 0, 0 would be the max.
+                # disallowing overlapping entities and occupying obstacles are handled in update()
+                
+		coords = np.nonzero(neighborhood['Entities'])
 		for row, col in zip(coords[0], coords[1]):
-			if neighborhood['entities'][row,col].name in gameData['Entities'][self.name]['Eats']:
-				self.skill += neighborhood['entities'][row,col].skill
-				neighborhood['entities'][row,col] = None
+			if neighborhood['Entities'][row,col].name in gameData['Entities'][self.name]['Eats']:
+				self.skill += neighborhood['Entities'][row,col].skill
+				neighborhood['Entities'][row,col] = None
 				move = (row-1,col-1)
 
 		move = moves[maxAt]
 		if move[0] == 0 and move[1] == 0:
+                        # never just stay put.  choose random direction instead.
 			move = (randint(-1,1),randint(-1,1))
 
 		return move
@@ -80,11 +82,10 @@ class Game(tk.Frame):
 		self.initObstacles()
 		self.initMetrics()
 		self.update()
-		#self.plot()
 		self.draw()
 
 	def createWidgets(self):
-		self.Surface = tk.Canvas(self, width=self.width, height = self.height, bg="#FFFFFF")
+		self.Surface = tk.Canvas(self, width=self.width, height=self.height, bg="#FFFFFF")
 		self.Surface.bind("<Button-1>", self.leftClick)
 		self.Surface.bind("<Button-3>", self.rightClick)
 		self.master.bind("<Key>",self.keyPress)
@@ -100,24 +101,22 @@ class Game(tk.Frame):
 		entityIDMapping = {}
 		for k, v in gameData['Entities'].items():
 			entityIDMapping[v['MapChar']] = k
-		
 
 		gameMap = np.loadtxt(mapFile,dtype='c')
 		self.shape = gameMap.shape
-		self.entities = np.empty(gameMap.shape,dtype=object)
+		self.entities = np.empty(gameMap.shape, dtype=object)
 		self.obstacles = np.ones(gameMap.shape)
-		self.cellsize = self.cellToPixel(1,1)
-		self.cellsize = (int(self.cellsize[0]), int(self.cellsize[1]))
+		self.cellsize = self.cellToPixel(1, 1)
 		for row in range(self.shape[0]):
 			for col in range(self.shape[1]):
-				if gameMap[row,col] == 'O':
+				if gameMap[row,col] == 'O': # 0 == obstacle
 					self.obstacles[row,col] = 0
-				elif gameMap[row,col] != '.':
+				elif gameMap[row,col] != '.': # . == normal land
 					self.entities[row,col] = Entity(self.cellsize, entityIDMapping[gameMap[row,col]])
 
 	def cellToPixel(self, row, col):
 		"""Returns tuple (x,y) representing the upper left corner of the given cell in pixel coordinates"""
-		return (col*float(self.width)/self.shape[1], row*float(self.height)/self.shape[0])
+		return (int(col*float(self.width)/self.shape[1]), int(row*float(self.height)/self.shape[0]))
 
 	def pixelToCell(self,x,y):
 		"""returns tuple (row,col) representing the cell which contains the given x,y coordinate"""
@@ -128,16 +127,11 @@ class Game(tk.Frame):
 		for row, col in zip(coords[0], coords[1]):
 			img = self.Surface.create_image(self.cellToPixel(row,col), image=self.entities[row,col].image, anchor="nw")
 			self.entities[row,col].canvasItemId = img
-		self.Surface.update()
 
 	def initObstacles(self):
-		neighborCoeff = self.sumOfNeighbors(self.obstacles)
-		self.neighborCoeff = neighborCoeff + np.logical_not(neighborCoeff)
-		self.neighborCoeff = self.obstacles / self.neighborCoeff
 		coords = np.nonzero(np.logical_not(self.obstacles))
 		for row, col in zip(coords[0], coords[1]):
 			self.Surface.create_rectangle(self.cellToPixel(row,col), self.cellToPixel(row+1,col+1), fill="#000000")
-		self.Surface.update()
 
 	def initMetrics(self):
 		self.metrics = {}
@@ -152,31 +146,20 @@ class Game(tk.Frame):
 		coords = np.nonzero(self.entities)
 		for row, col in zip(coords[0], coords[1]):
 			entMetrics = self.entities[row,col].getMetrics()
-			for k,v in entMetrics.items():
+			for k, v in entMetrics.items():
 				self.metrics[k]['seed'][row,col] = v
 
 	def diffuseMetrics(self):
+                """Diffuse each metric layer"""
 		for name, data in self.metrics.items():
-			seed = data['seed']
-			rate = data['rate']
-			itr = data['iters']
-			diff = data['diffused']
-			mask = np.logical_not(seed)
-			data['diffused'] = diffuse.diffuse(itr, rate, data['seed'], self.obstacles)
-
-	def sumOfNeighbors(self, a):
-		new = np.zeros(a.shape)
-		new = np.roll(a,1,0)+np.roll(a,1,1)+np.roll(a,-1,0)+np.roll(a,-1,1)
-		return new
+                        # call C diffusion extension
+			data['diffused'] = diffuse.diffuse(data['iters'], data['rate'], data['seed'], self.obstacles)
 
 	def getNeighborhood(self,row,col):
 		neighborhood = {}
-		neighborhood['entities'] = self.entities[row-1:row+2, col-1:col+2]
-		neighborhood['obstacles'] = self.obstacles[row-1:row+2, col-1:col+2]
+		neighborhood['Entities'] = self.entities[row-1:row+2, col-1:col+2]
 		for layer, data in self.metrics.items():
 			neighborhood[layer] = data['diffused'][row-1:row+2, col-1:col+2]
-			if neighborhood[layer].shape != (3,3):
-				print row, col
 		return neighborhood
 
 	def update(self):
@@ -184,13 +167,12 @@ class Game(tk.Frame):
 		self.diffuseMetrics()
 		coords = np.nonzero(self.entities)
 		for row, col in zip(coords[0], coords[1]):
-			if self.entities[row,col] == None or not self.entities[row,col].alive:
+			if not self.entities[row,col] or not self.entities[row,col].alive:
 				continue
-			n = self.getNeighborhood(row,col)
-			move = self.entities[row,col].getMove(n)
+			move = self.entities[row,col].getMove(self.getNeighborhood(row,col))
 			newPos = ((row+move[0])%self.entities.shape[0], (col+move[1])%self.entities.shape[1])
 			
-			if self.obstacles[newPos] == 1 and (self.entities[newPos] == None or self.entities[newPos].alive==False):
+			if self.obstacles[newPos] and not (self.entities[newPos] and self.entities[newPos].alive):
 				self.entities[newPos] = self.entities[row, col]
 				self.entities[row,col] = None
 
@@ -207,12 +189,10 @@ class Game(tk.Frame):
 		if not self.paused:
 			self.Surface.after(self.deltaT,self.update)
 		
-
 	def plot(self):
 		plt.figure(0)
 		plt.clf()
 		plt.suptitle(self.plotVal)
-		m = None
 		if self.plotVal == "All":
 			m = np.zeros(self.shape)
 			for k, v in self.metrics.items():
@@ -220,8 +200,8 @@ class Game(tk.Frame):
 		else:
 			m = self.metrics[self.plotVal]['diffused']
 		ln = LogNorm()
-		plt.imshow(m,interpolation=None, norm=ln)
-		plt.contour(m,norm=ln,colors='black', linewidth=.5)
+		plt.imshow(m, norm=ln)
+		plt.contour(m, norm=ln, colors='black', linewidth=.5)
 		plt.show()
 
 	def leftClick(self, event):
@@ -232,11 +212,10 @@ class Game(tk.Frame):
 			self.entities[row,col].canvasItemId = img
 			gameData['InsertEntity'][0]['count'] -= 1
 			if gameData['InsertEntity'][0]['count'] == 0:
-					print("Out of %s"%gameData['InsertEntity'][0]['entity'])
+                                print("Out of %s"%gameData['InsertEntity'][0]['entity'])
 				
 	def keyPress(self, event):
 		if event.char == "p":
-                        self.update()
 			self.paused = not self.paused
 			if not self.paused:
 				self.update()
@@ -244,22 +223,13 @@ class Game(tk.Frame):
 			self.showPlot = not self.showPlot
 			if self.showPlot:
 				self.plot()
-		elif event.char == "f":
-			self.plotVal = "FoodMetric"
-			self.plot()
-		elif event.char ==  "b":
-			self.plotVal = "BirdMetric"
-			self.plot()
-		elif event.char == "h":
-			self.plotVal = "HawkMetric"
-			self.plot()
-		elif event.char == "a":
-			self.plotVal = "All"
-			self.plot()
 		elif event.char == "s":
 			self.paused = True
 			self.update()
-
+		elif event.char in plotKeys:
+                        self.plotVal = plotKeys[event.char]
+			self.plot()
+                        
 	def rightClick(self, event):
 		row, col = self.pixelToCell(event.x, event.y)
 		if self.entities[row, col] == None and gameData['InsertEntity'][1]['count'] > 0:
