@@ -95,7 +95,7 @@ class Game(tk.Frame):
 
 	def loadMap(self, mapFile='map1.map'):
 		global gameData
-		dataFile = mapFile.replace('.map','.data')
+		dataFile = 'map.data'#mapFile.replace('.map','.data')
 		f = open(dataFile)
 		gameData = eval(f.read())
 		f.close()
@@ -198,7 +198,10 @@ class Game(tk.Frame):
         def drawText(self):
                 """Draw text indicating the ammount of each Insert Entity left"""
                 for i in range(len(gameData['InsertEntity'])):
-                        ammoString = str(gameData['InsertEntity'][i]['count']) + " " + str(gameData['InsertEntity'][i]['entity']) + " left"
+                        entityInfo = gameData['InsertEntity'][i]
+                        count = entityInfo['count']
+                        countString = str(count) if count > 0 else "No"
+                        ammoString = countString + " " + str(entityInfo['label']) + " left"
                         if self.text[i]: # create the item if it doesn't exist, otherwise set its text
                                 self.Surface.itemconfig(self.text[i], text=ammoString)
                         else:
@@ -218,16 +221,6 @@ class Game(tk.Frame):
 		plt.imshow(m, norm=ln)
 		plt.contour(m, norm=ln, colors='black', linewidth=.5)
 		plt.show()
-
-	def leftClick(self, event):
-		row, col = self.pixelToCell(event.x, event.y)
-		if self.entities[row, col] == None and gameData['InsertEntity'][0]['entity'] > 0:
-			self.entities[row,col] = Entity(self.cellsize, gameData['InsertEntity'][0]['entity'])
-			img = self.Surface.create_image(self.cellToPixel(row,col), image=self.entities[row,col].image, anchor="nw")
-			self.entities[row,col].canvasItemId = img
-			gameData['InsertEntity'][0]['count'] -= 1
-			if gameData['InsertEntity'][0]['count'] == 0:
-                                print("Out of %s"%gameData['InsertEntity'][0]['entity'])
 				
 	def keyPress(self, event):
 		if event.char == "p":
@@ -244,16 +237,20 @@ class Game(tk.Frame):
 		elif event.char in plotKeys:
                         self.plotVal = plotKeys[event.char]
 			self.plot()
-                        
-	def rightClick(self, event):
+
+        def click(self, event, insertId):
 		row, col = self.pixelToCell(event.x, event.y)
-		if self.entities[row, col] == None and gameData['InsertEntity'][1]['count'] > 0:
-			self.entities[row,col] = Entity(self.cellsize, gameData['InsertEntity'][1]['entity'])
+		if self.obstacles[row, col] and self.entities[row, col] == None and gameData['InsertEntity'][insertId]['count'] > 0:
+                        self.entities[row,col] = Entity(self.cellsize, gameData['InsertEntity'][insertId]['entity'])
 			img = self.Surface.create_image(self.cellToPixel(row,col), image=self.entities[row,col].image, anchor="nw")
 			self.entities[row,col].canvasItemId = img
-			gameData['InsertEntity'][1]['count'] -= 1
-			if gameData['InsertEntity'][1]['count'] == 0:
-				print("Out of %s"%gameData['InsertEntity'][1]['entity'])
+			gameData['InsertEntity'][insertId]['count'] -= 1
+                
+	def leftClick(self, event):
+                self.click(event, 0)
+                
+	def rightClick(self, event):
+                self.click(event, 1)
 
 g = Game()
 while True:
