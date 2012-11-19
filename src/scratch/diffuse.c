@@ -3,6 +3,10 @@
 
 static PyObject *diffuse(PyObject *self, PyObject *args);
 
+// KH: Adapted Code from:
+// KH: http://www.scipy.org/Cookbook/C_Extensions/NumPy_arrays
+// KH: Adapted Code Begin
+
 static char module_docstring[] =
     "This module provides an interface for calculating diffusion using C.";
 static char diffusion_docstring[] =
@@ -47,6 +51,10 @@ int **intMatrixToCArrayPtrs(PyArrayObject *arrayin, int numCols, int numRows)  {
     return c;
 }
 
+//KH: Adapted Code End
+
+
+//KH: Original Code Begin
 /*
  * Diffuse a 2d numpy array using the given number of iterations, rate,
  * metric array and obstacle array.
@@ -119,3 +127,4 @@ static PyObject *diffuse(PyObject *self, PyObject *args) {
     
     return PyArray_Return(resultArray);
 }
+//KH: Original Code End

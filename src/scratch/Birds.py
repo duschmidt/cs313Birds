@@ -1,3 +1,7 @@
+# KH: All code in this file is original.
+# KH: Various Tkinter / matplotlib usage was adapted from various sources,
+# KH: but no significant portions were used directly.
+
 import sys
 import Tkinter as tk
 import numpy as np
