@@ -171,6 +171,14 @@ class Game(tk.Frame):
 			self.Surface.create_rectangle(self.cellToPixel(row,col), self.cellToPixel(row+1,col+1), fill="#000000")
 		self.Surface.update()
 
+		# neighborCoeff = self.sumOfNeighbors(self.obstacles)#compute count of neighbor cells, where obstacles don't count
+		# self.neighborCoeff = neighborCoeff + np.logical_not(neighborCoeff)#neighborCoeff will be a denominator under obstacles, need to make 0's into 1's
+		# self.neighborCoeff = self.obstacles / self.neighborCoeff#compute the neighborCoeff, zero at obstacles
+		# coords = np.nonzero(np.logical_not(self.obstacles))
+		# for row, col in zip(coords[0], coords[1]):
+		# 	self.Surface.create_rectangle(self.cellToPixel(row,col), self.cellToPixel(row+1,col+1), fill="#000000")
+		# self.Surface.update()
+
 	def initMetrics(self):
 		"""Initialize metric seeds and diffusion arrays to zeros.
 		NOTE: use loadMap() before calling"""		
@@ -195,6 +203,22 @@ class Game(tk.Frame):
 		for name, data in self.metrics.items():
 			# call C diffusion extension
 			data['diffused'] = diffuse.diffuse(data['iters'], data['rate'], data['seed'], self.obstacles)
+
+		# for name, data in self.metrics.items():
+		# 	seed = data['seed']
+		# 	rate = data['rate']
+		# 	itr = data['iters']
+		# 	diff = data['diffused']
+		# 	mask = np.logical_not(seed)
+		# 	for i in range(itr):
+		# 		diff = rate*self.neighborCoeff*self.sumOfNeighbors(diff)*mask + seed
+		# 	self.metrics[name]['diffused']=diff
+
+	def sumOfNeighbors(self, a):
+		new = np.zeros(a.shape)
+		new = np.roll(a,1,0)+np.roll(a,1,1)+np.roll(a,-1,0)+np.roll(a,-1,1)
+		return new
+
 
 	def getNeighborhood(self,row,col):
 		"""Returns a 3 X 3 matrix centered around row, col with all metric diffusion values"""
@@ -286,6 +310,7 @@ class Game(tk.Frame):
 		"""Handles keypress events"""
 		if event.char == "p":
 			self.paused = not self.paused
+			self.update()
 		elif event.char == "t":
 			self.showPlot = not self.showPlot
 		elif event.char == "s":
