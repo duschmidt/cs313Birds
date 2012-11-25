@@ -35,5 +35,6 @@
 					 'Moves':True
 					}
 			},
- 'InsertEntity':[{'entity':'Food', 'label':'food', 'count':15},{'entity':'Bird', 'label':'birds', 'count':12}]
+ 'InsertEntity':[{'entity':'Food','label':'food','count':15},{'entity':'Bird','label':'bird','count':12}, {'entity':'Hawk','label':'hawk','count':12}],
+ 'StartPaused':False
 }

@@ -1,8 +1,9 @@
 {
  'Metrics':{
- 			'FoodMetric':{'rate':0.9,'iters':1},
+ 			'FoodMetric':{'rate':0.9,'iters':10},
 		    'BirdMetric':{'rate':0.9,'iters':15},
-		    'HawkMetric':{'rate':0.7,'iters':15}
+		    'HawkMetric':{'rate':0.7,'iters':15},
+		    'NestMetric':{'rate':0,  'iters':0}
 		   },
  'Entities':{
 			'Food':{ 'Eats':[],
@@ -10,7 +11,8 @@
 					 'MapChar':'F',
 					 'Image':'apple.png',
 					 'Affects':{'FoodMetric':1},
-					 'Moves':False
+					 'Moves':False,
+					 'StartSkill':0
 					},
 			'Bird':{ 'Eats':['Food'],
 					 'Weights':{
@@ -20,8 +22,9 @@
 			   					},
 					 'MapChar':'B',
 					 'Image':'bird.png',
-					 'Affects':{'BirdMetric':1},
-					 'Moves':True
+					 'Affects':{'BirdMetric':'skill'},
+					 'Moves':True,
+					 'StartSkill':1
 					},
 			'Hawk':{ 'Eats':['Bird', 'Food'],
 					 'Weights':{
@@ -32,9 +35,19 @@
 					 'MapChar':'H',
 					 'Image':'hawk.png',
 					 'Affects':{'HawkMetric':1},
-					 'Moves':True
-					}
+					 'Moves':True,
+					 'StartSkill':0
+					},
+			'Nest':{ 'Eats':['Bird'],
+					 'Weights':{},
+					 'MapChar':'N',
+					 'Image':'nest.png',
+					 'Affects':{'NestMetric':'skill'},
+					 'Moves':False,
+					 'StartSkill':0
+				   }
 			},
  'InsertEntity':[{'entity':'Food','label':'food','count':15},{'entity':'Bird','label':'bird','count':12}, {'entity':'Hawk','label':'hawk','count':12}],
- 'StartPaused':True
+ 'StartPaused':True,
+ 'Win':{'NestMetric':5}
 }

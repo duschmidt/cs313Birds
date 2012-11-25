@@ -12,13 +12,18 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm, Colormap
 from random import randint
 
+#: Keep an array of relative moves, each element is a two tuple corresponding to an x/y relative move of a game entity
 moves = [(-1, -1), (-1, 0), (-1, 1),
 	 (0,  -1), (0,  0), (0,  1),
 	 (1,  -1), (1,  0), (1,  1)]
-emptyNeighborhood = np.empty((3,3)) # used to avoid array instantiation in getMove() 	
-noneNeighborhood = np.empty((3,3),dtype=object) # used to see where entities exist in neighborhood
-gameData = None
-# Hotkeys for plotting and their corresponding metrics
+
+emptyNeighborhood = np.empty((3,3)) #: used to avoid array instantiation in L{Entity.getMove}
+
+noneNeighborhood = np.empty((3,3),dtype=object) #: used to see where entities exist in neighborhood
+
+gameData = None #: Stores information about metrics, entities and entity behavior, see file map.data 
+
+#: Hotkeys for plotting and their corresponding metrics
 plotKeys = {'f':'FoodMetric', 'b':'BirdMetric', 'h':'HawkMetric', 'a':'All'};
 
 class Entity():
@@ -33,12 +38,25 @@ class Entity():
 		self.alive = True #a boolean to indicate whether this entity is alive
 		self.name = name #a name for the type of entity, used as a key into the game data structure
 		self.canvasItemId = -1 #the integer identifier of a tkinter canvas item corresponding to this entity
-		self.skill = 10 #a general metric for the skill level of an entity
+		self.skill = gameData['Entities'][self.name]['StartSkill']#a general metric for the skill level of an entity
 
 		#Load the image file for this entity
 		im = Image.open(gameData['Entities'][self.name]['Image']) 
 		im = im.resize(size)
 		self.image = ImageTk.PhotoImage(image=im)
+
+	def eat(self, neighborhood):
+		# find occupied cells
+		coords = np.nonzero(neighborhood['Entities'])
+		for row, col in zip(coords[0], coords[1]):#loop over occupied cells
+			#check if there is an edible neighbor
+			if neighborhood['Entities'][row,col].name in gameData['Entities'][self.name]['Eats']:
+				#eat the neighbor
+				self.skill += neighborhood['Entities'][row,col].skill
+				neighborhood['Entities'][row,col] = None
+				move = (row-1,col-1) #move to the cell of the eaten entity
+				return move #return the move
+		return None
 
 	def getMove(self, neighborhood):
 		"""this method accepts a dictionary of parallel 3x3 numpy arrays which represent the environment around this entity and 
@@ -46,6 +64,7 @@ class Entity():
 		
 		if not gameData['Entities'][self.name]['Moves']:
 			#non moving entity, stay put
+			self.eat(neighborhood)
 			return(0,0)
 
 		a = emptyNeighborhood.copy() # copy array of zeros
@@ -61,54 +80,62 @@ class Entity():
 		# find the maximum valued cell after applying weights and obstacle/entity masks
 		maxAt = np.argmax(a)
 
-		# find occupied cells
-		coords = np.nonzero(neighborhood['Entities'])
+		eatenAt = self.eat(neighborhood)
+		if eatenAt != None:
+			return eatenAt
 
-		for row, col in zip(coords[0], coords[1]):#loop over occupied cells
-			#check if there is an edible neighbor
-			if neighborhood['Entities'][row,col].name in gameData['Entities'][self.name]['Eats']:
-				#eath the neighbor
-				self.skill += neighborhood['Entities'][row,col].skill
-				neighborhood['Entities'][row,col] = None
-				move = (row-1,col-1) #move to the cell of the eaten entity
-				return move #return the move
+		
 
 		move = moves[maxAt] #find the move to the cell with max value
 		if move[0] == 0 and move[1] == 0:
 			# moving entities never just stay put.  choose random direction instead.
-			move = (randint(-1,1),randint(-1,1))
+			pass#move = (randint(-1,1),randint(-1,1))
 
 		return move
 
 	def getMetrics(self):
 		"""This method returns a dictionary keyed by metric layers with numeric values that this entity should place in into the given metric layer"""
-		return gameData['Entities'][self.name]['Affects']
+		effect = {}
+		for k,v in gameData['Entities'][self.name]['Affects'].items():
+			if v == 'skill':#Affect this layer with entity skill
+				effect[k] = self.skill
+			else:#affect this layer with numeric value
+				effect[k] = v
+		return effect
 
 class Game(tk.Frame):
-	def __init__(self, master=tk.Tk(), height=700, width=700):
+	def __init__(self, master=tk.Tk(), height=700, width=700, mapFile = "map1.map"):
 		tk.Frame.__init__(self, master)
 		self.master = master
 		self.deltaT = 1 #:Time delay in ms between frame updates, not guaranteed
-		self.text = [None, None] # holds Tkinter text items
+		self.text = [None, None, None] # holds Tkinter text items
 		self.paused = False
 		plt.ion()
-		self.showPlot = True
+		self.showPlot = False
 		self.plotVal = "FoodMetric"
 		self.height=height
 		self.width=width
-		self.loadMap(mapFile = "map2.map")
+		self.mapFile = mapFile
+		self.diffuseMetrics = self.diffuseDustin
 		self.createWidgets()
 		self.pack()
+		self.setup()
+		self.draw()
+		if not self.paused:
+			self.mainLoop()
+
+	def setup(self):
+		self.loadMap(mapFile = self.mapFile)
 		self.initEntities()
 		self.initObstacles()
 		self.initMetrics()
-		self.update()
-		self.draw()
+		
 
 	def createWidgets(self):
 		"""Creates Tkinter UI elements"""
 		self.Surface = tk.Canvas(self, width=self.width, height=self.height, bg="#FFFFFF")
 		self.Surface.bind("<Button-1>", self.leftClick)
+		self.Surface.bind("<Button-2>", self.midClick)
 		self.Surface.bind("<Button-3>", self.rightClick)
 		self.master.bind("<Key>",self.keyPress)
 		self.Surface.pack()
@@ -116,19 +143,20 @@ class Game(tk.Frame):
 	def loadMap(self, mapFile='map1.map'):
 		"""Loads a map layout from a file given by mapFile
 			@param mapFile: a string file name to a map file"""
-
+		global gameData
 		try: #attempt to load a gameDataFile specific to this map
-			global gameData
 			dataFile = mapFile.replace('.map','.data')
 			f = open(dataFile)
 			gameData = eval(f.read())
 			f.close()
 		except: #load the default gameData file
-			global gameData
+			print "Using default gamedata"
 			dataFile = "map.data"
 			f = open(dataFile)
 			gameData = eval(f.read())
 			f.close()
+
+		self.paused = gameData['StartPaused']
 
 		entityIDMapping = {}
 		for k, v in gameData['Entities'].items():
@@ -166,18 +194,18 @@ class Game(tk.Frame):
 	def initObstacles(self):
 		"""Initialize all obstacles that are encoded in the map file.
 		NOTE: use loadMap() before calling"""
-		coords = np.nonzero(np.logical_not(self.obstacles))
-		for row, col in zip(coords[0], coords[1]):
-			self.Surface.create_rectangle(self.cellToPixel(row,col), self.cellToPixel(row+1,col+1), fill="#000000")
-		self.Surface.update()
-
-		# neighborCoeff = self.sumOfNeighbors(self.obstacles)#compute count of neighbor cells, where obstacles don't count
-		# self.neighborCoeff = neighborCoeff + np.logical_not(neighborCoeff)#neighborCoeff will be a denominator under obstacles, need to make 0's into 1's
-		# self.neighborCoeff = self.obstacles / self.neighborCoeff#compute the neighborCoeff, zero at obstacles
 		# coords = np.nonzero(np.logical_not(self.obstacles))
 		# for row, col in zip(coords[0], coords[1]):
 		# 	self.Surface.create_rectangle(self.cellToPixel(row,col), self.cellToPixel(row+1,col+1), fill="#000000")
 		# self.Surface.update()
+
+		neighborCoeff = self.sumOfNeighbors(self.obstacles)#compute count of neighbor cells, where obstacles don't count
+		self.neighborCoeff = neighborCoeff + np.logical_not(neighborCoeff)#neighborCoeff will be a denominator under obstacles, need to make 0's into 1's
+		self.neighborCoeff = self.obstacles / self.neighborCoeff#compute the neighborCoeff, zero at obstacles
+		coords = np.nonzero(np.logical_not(self.obstacles))
+		for row, col in zip(coords[0], coords[1]):
+			self.Surface.create_rectangle(self.cellToPixel(row,col), self.cellToPixel(row+1,col+1), fill="#000000")
+		self.Surface.update()
 
 	def initMetrics(self):
 		"""Initialize metric seeds and diffusion arrays to zeros.
@@ -198,21 +226,23 @@ class Game(tk.Frame):
 			for k, v in entMetrics.items():
 				self.metrics[k]['seed'][row,col] = v
 
-	def diffuseMetrics(self):
+
+	def diffuseKarl(self):
 		"""Diffuse each metric layer"""
 		for name, data in self.metrics.items():
 			# call C diffusion extension
 			data['diffused'] = diffuse.diffuse(data['iters'], data['rate'], data['seed'], self.obstacles)
 
-		# for name, data in self.metrics.items():
-		# 	seed = data['seed']
-		# 	rate = data['rate']
-		# 	itr = data['iters']
-		# 	diff = data['diffused']
-		# 	mask = np.logical_not(seed)
-		# 	for i in range(itr):
-		# 		diff = rate*self.neighborCoeff*self.sumOfNeighbors(diff)*mask + seed
-		# 	self.metrics[name]['diffused']=diff
+	def diffuseDustin(self):
+		for name, data in self.metrics.items():
+			seed = data['seed']
+			rate = data['rate']
+			itr = data['iters']
+			diff = data['diffused']
+			mask = np.logical_not(seed)
+			for i in range(itr):
+				diff = rate*self.neighborCoeff*self.sumOfNeighbors(diff)*mask + seed
+			self.metrics[name]['diffused']=diff
 
 	def sumOfNeighbors(self, a):
 		new = np.zeros(a.shape)
@@ -233,9 +263,10 @@ class Game(tk.Frame):
 		"""Main game logic update method.  Call once per frame."""
 		self.seedMetrics()
 		self.diffuseMetrics()
+		updated = np.zeros(self.shape, dtype=bool)
 		coords = np.nonzero(self.entities)
 		for row, col in zip(coords[0], coords[1]):
-			if not self.entities[row,col] or not self.entities[row,col].alive:
+			if not self.entities[row,col] or not self.entities[row,col].alive or updated[row,col]:
 				continue
 			move = self.entities[row,col].getMove(self.getNeighborhood(row,col))
 			newPos = ((row+move[0])%self.entities.shape[0], (col+move[1])%self.entities.shape[1])
@@ -243,7 +274,29 @@ class Game(tk.Frame):
 			if self.obstacles[newPos] and not (self.entities[newPos] and self.entities[newPos].alive):
 				self.entities[newPos] = self.entities[row, col]
 				self.entities[row,col] = None
-		self.draw()
+			updated[row,col] = True
+			updated[newPos] = True
+
+	def checkWin(self):
+		if gameData.has_key('Win'):
+			for k,v in gameData['Win'].items():
+				value = np.sum(self.metrics[k]['seed'])
+				#print value
+				if value >= v:
+					print "YOU WIN!"
+					return True
+		return False
+
+	def mainLoop(self):
+		if self.checkWin():
+			self.setup()
+		else:
+			self.update()
+			self.draw()
+
+		if not self.paused:
+			self.Surface.after(self.deltaT,self.mainLoop)
+
 
 	def draw(self):
 		"""Takes care of all visual rendering/updating"""
@@ -252,32 +305,36 @@ class Game(tk.Frame):
 			item = self.entities[row,col].canvasItemId
 			pos = self.cellToPixel(row,col)
 			self.Surface.coords(item, pos)
-			self.drawText()
+		
+		self.drawText()
 		self.Surface.update()
 		if self.showPlot: self.plot()
-		if not self.paused:
-			self.Surface.after(self.deltaT,self.update)
+		
 
 
 	def drawText(self):
 		"""Draw text indicating the ammount of each Insert Entity left"""
-		for i in range(len(gameData['InsertEntity'])):
-			entityInfo = gameData['InsertEntity'][i]
+		clickString=["Left","Mid","Right"]
+		i=0
+		for entityInfo in gameData['InsertEntity']:
 			count = entityInfo['count']
 			label = entityInfo['label']
 			countString = str(count) if count > 0 else "No"
-			clickString = "Left" if i == 0 else "Right"
-			ammoString = clickString + "-Click to add " + label + ". (" + countString + " " + label + " remaining)"
+
+			
+			ammoString = clickString[i] + "-Click to add " + label + ". (" + countString + " " + label + " remaining)"
 			if self.text[i]: # create the item if it doesn't exist, otherwise set its text
 				self.Surface.itemconfig(self.text[i], text=ammoString)
 			else:
 				self.text[i] = self.Surface.create_text(20, 20 * (i + 1), anchor=tk.W, fill='blue', text=ammoString)
+			i+=1
 		
 	def plot(self):
 		"""Use matplotlib to draw pretty graphs of user-specified metric layers"""
 		plt.figure(0)
 		plt.clf()
 		plt.suptitle(self.plotVal)
+		m = None
 		if self.plotVal == "All":
 			m = np.zeros(self.shape)
 			for k, v in self.metrics.items():
@@ -285,12 +342,15 @@ class Game(tk.Frame):
 		else:
 			m = self.metrics[self.plotVal]['diffused']
 
-			if np.max(m) != 0:
+		if np.max(m) != 0:
+			try:
 				ln = LogNorm()
 				plt.imshow(m, interpolation='None', norm=ln)
 				plt.contour(m, norm=ln, colors='black', linewidth=.5)
-			else:
-				plt.imshow(m)
+			except:
+				pass
+		else:
+			plt.imshow(m)
 		plt.show()
 				
 	def click(self, event, insertId):
@@ -305,17 +365,30 @@ class Game(tk.Frame):
 			img = self.Surface.create_image(self.cellToPixel(row,col), image=self.entities[row,col].image, anchor="nw")
 			self.entities[row,col].canvasItemId = img
 			entityInfo['count'] -= 1
+		elif self.entities[row,col] != None:
+			self.entities[row,col] = None
+		self.drawText()
+		self.Surface.update()
+		gameData['InsertEntity'][insertId] = entityInfo
 
 	def keyPress(self, event):
 		"""Handles keypress events"""
 		if event.char == "p":
 			self.paused = not self.paused
-			self.update()
+			self.mainLoop()
 		elif event.char == "t":
 			self.showPlot = not self.showPlot
+			self.plot()
 		elif event.char == "s":
 			self.paused = True
-			self.update()
+			self.mainLoop()
+		elif event.char == "d":
+			if self.diffuseMetrics == self.diffuseDustin:
+				self.diffuseMetrics = self.diffuseKarl
+				print "Swtich to Karl's diffusion"
+			else:
+				self.diffuseMethod = self.diffuseDustin
+				print "Switch to Dustin's diffusion"
 		elif event.char in plotKeys:
 			self.showPlot = True
 			self.plotVal = plotKeys[event.char]
@@ -325,8 +398,11 @@ class Game(tk.Frame):
 		"""Handles left click events"""
 		self.click(event, 0)
 		
+	def midClick(self,event):
+		"""Handles middle click events"""
+		self.click(event, 1)
 	def rightClick(self, event):
 		"""Handles right click events"""
-		self.click(event, 1)
+		self.click(event, 2)
 
-g = Game()
+g = Game(mapFile = "map3.map")
