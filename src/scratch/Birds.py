@@ -346,7 +346,9 @@ class Game(tk.Frame):
 			try:
 				ln = LogNorm()
 				plt.imshow(m, interpolation='None', norm=ln)
+				plt.colorbar()
 				plt.contour(m, norm=ln, colors='black', linewidth=.5)
+
 			except:
 				pass
 		else:
@@ -405,4 +407,4 @@ class Game(tk.Frame):
 		"""Handles right click events"""
 		self.click(event, 2)
 
-g = Game(mapFile = "map3.map")
+g = Game(mapFile = "map4.map")

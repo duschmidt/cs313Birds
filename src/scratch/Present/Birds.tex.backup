@@ -55,42 +55,16 @@
 \end{frame}
 
 
-\begin{frame}{Diffusion Algorithm}\fontsize{6pt}{7}\selectfont
+\begin{frame}{AI Details}
+
+
+Sum of Neighbors Operator: \( S(X): S_{i,j} = X_{i+1,j} + X_{i,j+1} + X_{i-1,j} + X_{i,j-1} \)
  
- \begin{itemize}\fontsize{6pt}{7}\selectfont
-  \item Sum of Neighbors Operator: \\$ S(X): S_{i,j} = X_{i+1,j} + X_{i,j+1} + X_{i-1,j} + X_{i,j-1} $
-  \item Input for game map of size $m \times n$:
-    \begin{itemize}\fontsize{6pt}{7}\selectfont
-     \item Metric Seed: $M_{m \times n}: M_{i,j} = \left\{ \begin{array}{rl}
-0 &\mbox{ if no metric seed exists at cell }(i,j) \\
-1 &\mbox{ otherwise}
-\end{array} \right.$ \\ The originating metric values to be diffused
-     \item Obstacle Mask: $O_{m \times n}: O_{i,j} \in \{0,1\} \forall i<m, j<n$ \\ A mask to hide obstacles.  Has value of 0 where obstacles exist, 1 everywhere else
-     \item Diffusion Matrix: $D\in \mathbb{R}_{m \times n}$ \\ Existing diffusion array to be further diffused.  Initially all zeros
-     \item Diffusion Rate: $d: d \in \mathbb{R},  d < 1$ \\ Diffusion rate scalar, controls how much one cell bleeds into another
-     \item Iteration count: $i: i \in \mathbb{Z}, i > 0$ \\ Numer of diffusion iterations to apply.  Controls rate at which metric diffuses through environment
-    \end{itemize}
-  \item Return Value: Diffusion Matrix: $\hat D \in \mathbb{R}_{m \times n}$: Metric seed values diffused
-  \item Precomputed Values:
-      \begin{itemize}\fontsize{6pt}{7}\selectfont
-	\item Metric Mask: $\bar M_{m \times n}: \bar M_{i,j} =  \left\{ \begin{array}{rl}
-1 &\mbox{ if $M_{i,j} = 0$} \\
-0 &\mbox{ otherwise}
-\end{array} \right.$ \\ A mask to hide metric seed cells.\\Need only be computed when $M$ changes a 0 valued cell to non-zero value.\\Has value of 0 where metric seeds exist, 1 everywhere else
-	\item Neighbor coefficient matrix: $\hat N\in \mathbb{R}_{m \times n}$ \\ Coefficients to compute the average of neighboring cells, has value of 0 for obstacles
-      \end{itemize}
-  \item Diffusion Algorithm ($\odot$ deonotes element-wise matrix multiplication):\\
-    $\hat D \leftarrow D$\\
-    FOR $j=1:i$\\
-    \ \ \ $\hat D \leftarrow \hat D + d (S(\hat D) \odot \bar{M} \odot \hat{N}) + M$ \\
-    RETURN $\hat D$
-    
-   
-\end{itemize}
+ 
 \end{frame}
 
 
-\begin{frame}{Diffusion Example}\fontsize{6pt}{7}\selectfont
+\begin{frame}{Diffusion Details}\fontsize{6pt}{7}\selectfont
 
 \begin{tabular}{lllL}
 
@@ -129,7 +103,7 @@ Metric Mask: & \( \bar M = \) & \(
 \end{tabular}
 \end{frame}
 
-\begin{frame}{Diffusion Example}\fontsize{6pt}{7}\selectfont
+\begin{frame}{Diffusion Details}\fontsize{6pt}{7}\selectfont
  
  \begin{tabular}{lllL}
 Obstacle Mask: &  \( O = \) & \( 
@@ -171,7 +145,35 @@ O/N Coefficient: &  \( \hat N_{i,j} = \frac{O_{i,j}}{N_{i,j}} = \) & \(
 
 \end{frame}
 
-
+\begin{frame}{Algorithm}\fontsize{6pt}{7}\selectfont
+ 
+ \begin{itemize}\fontsize{6pt}{7}\selectfont
+ \item Input for game map of size $m \times n$:
+    \begin{itemize}\fontsize{6pt}{7}\selectfont
+     \item Metric Seed: $M \in \mathbb{R}_{m \times n}$ \\ The originating metric values to be diffused
+     \item Obstacle Mask: $O_{m \times n}: O_{i,j} \in \{0,1\} \forall i<m, j<n$ \\ A mask to hide obstacles.  Has value of 0 where obstacles exist, 1 everywhere else
+     \item Diffusion Matrix: $D\in \mathbb{R}_{m \times n}$ \\ Existing diffusion array to be further diffused.  Initially all zeros
+     \item Diffusion Rate: $d: d \in \mathbb{R},  d < 1$ \\ Diffusion rate scalar, controls how much one cell bleeds into another
+     \item Iteration count: $i: i \in \mathbb{Z}$ \\ Numer of diffusion iterations to apply.  Controls rate at which metric diffuses through environment
+    \end{itemize}
+  \item Return Value: Diffusion Matrix: $D' \in \mathbb{R}_{m \times n}$: Metric seed values diffused
+  \item Precomputed Values:
+      \begin{itemize}\fontsize{6pt}{7}\selectfont
+	\item Metric Mask: $\bar M_{m \times n}: \bar M_{i,j} =  \left\{ \begin{array}{rl}
+1 &\mbox{ if $M_{i,j} = 0$} \\
+0 &\mbox{ otherwise}
+\end{array} \right.$ \\ A mask to hide metric seed cells.\\Need only be computed when $M$ changes a 0 valued cell to non-zero value.\\Has value of 0 where metric seeds exist, 1 everywhere else
+	\item Neighbor coefficient matrix: $\hat N\in \mathbb{R}_{m \times n}$ \\ Coefficients to compute the average of neighboring cells, has value of 0 for obstacles
+      \end{itemize}
+  \item Diffusion Algorithm ($\odot$ deonotes element-wise matrix multiplication):\\
+    $\hat D \leftarrow D$\\
+    FOR $j=1:i$\\
+    \ \ \ $\hat D \leftarrow \hat D + d (S(\hat D) \odot \bar{M} \odot \hat{N}) + M$ \\
+    RETURN $\hat D$
+    
+   
+\end{itemize}
+\end{frame}
 
 \begin{frame}{Agent Utilization of Metrics}
  

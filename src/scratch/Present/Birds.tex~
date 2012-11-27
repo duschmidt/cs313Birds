@@ -55,7 +55,15 @@
 \end{frame}
 
 
-\begin{frame}{Diffusion Algorithm}\fontsize{6pt}{7}\selectfont
+\begin{frame}{AI Details}
+
+
+Sum of Neighbors Operator: \( S(X): S_{i,j} = X_{i+1,j} + X_{i,j+1} + X_{i-1,j} + X_{i,j-1} \)
+ 
+ 
+\end{frame}
+
+\begin{frame}{Algorithm}\fontsize{6pt}{7}\selectfont
  
  \begin{itemize}\fontsize{6pt}{7}\selectfont
   \item Sum of Neighbors Operator: \\$ S(X): S_{i,j} = X_{i+1,j} + X_{i,j+1} + X_{i-1,j} + X_{i,j-1} $
@@ -90,7 +98,7 @@
 \end{frame}
 
 
-\begin{frame}{Diffusion Example}\fontsize{6pt}{7}\selectfont
+\begin{frame}{Diffusion Details}\fontsize{6pt}{7}\selectfont
 
 \begin{tabular}{lllL}
 
@@ -129,7 +137,7 @@ Metric Mask: & \( \bar M = \) & \(
 \end{tabular}
 \end{frame}
 
-\begin{frame}{Diffusion Example}\fontsize{6pt}{7}\selectfont
+\begin{frame}{Diffusion Details}\fontsize{6pt}{7}\selectfont
  
  \begin{tabular}{lllL}
 Obstacle Mask: &  \( O = \) & \( 
