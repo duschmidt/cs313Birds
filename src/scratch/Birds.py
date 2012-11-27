@@ -407,4 +407,4 @@ class Game(tk.Frame):
 		"""Handles right click events"""
 		self.click(event, 2)
 
-g = Game(mapFile = "map4.map")
+g = Game(mapFile = "map3.map")
