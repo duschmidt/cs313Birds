@@ -7,7 +7,7 @@ import Tkinter as tk
 import numpy as np
 import Image
 import ImageTk
-import diffuseD
+import diffuse
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm, Colormap
 from random import randint
@@ -111,7 +111,7 @@ class Game(tk.Frame):
 		self.text = [None, None, None] # holds Tkinter text items
 		self.paused = False
 		plt.ion()
-		self.showPlot = False
+		self.showPlot = True
 		self.plotVal = "FoodMetric"
 		self.height=height
 		self.width=width
@@ -229,12 +229,12 @@ class Game(tk.Frame):
 		"""Diffuse each metric layer"""
 		for name, data in self.metrics.items():
 			# call C diffusion extension
-			data['diffused'] = diffuseD.diffuseD(data['iters'], data['rate'], data['seed'], data['diffused'], self.obstacles, self.neighborCoeff)
+			data['diffused'] = diffuse.diffuse(data['iters'], data['rate'], data['seed'], self.obstacles)
 
 	def diffuseDustin(self):
 		# for name, data in self.metrics.items():
 		# 	# call C diffusion extension
-		# 	data['diffused'] = diffuseD.diffuse(data['iters'], data['rate'], data['seed'], self.obstacles)
+		# 	data['diffused'] = diffuse.diffuse(data['iters'], data['rate'], data['seed'], self.obstacles)
 
 
 		for name, data in self.metrics.items():
@@ -346,7 +346,7 @@ class Game(tk.Frame):
 		if np.max(m) != 0:
 			try:
 				ln = LogNorm()
-				plt.imshow(m, interpolation='None', norm=ln)
+				plt.imshow(m, interpolation=None, norm=ln)
 				plt.colorbar()
 				plt.contour(m, norm=ln, colors='black', linewidth=.5)
 
@@ -388,7 +388,7 @@ class Game(tk.Frame):
 		elif event.char == "d":
 			if self.diffuseMetrics == self.diffuseDustin:
 				self.diffuseMetrics = self.diffuseKarl
-				print "Swtich to Karl's diffusion"
+				print "Switch to Karl's diffusion"
 			else:
 				self.diffuseMethod = self.diffuseDustin
 				print "Switch to Dustin's diffusion"
@@ -408,4 +408,6 @@ class Game(tk.Frame):
 		"""Handles right click events"""
 		self.click(event, 2)
 
-g = Game(mapFile = "map1.map")
+g = Game(mapFile = "map2.map")
+while True:
+        g.mainLoop()
