@@ -295,7 +295,8 @@ class Game(tk.Frame):
 		if self.checkWin():
 			self.setup()
 		else:
-			self.update()
+                        if not self.paused:
+                                self.update()
 			self.draw()
 
 		if not self.paused:
