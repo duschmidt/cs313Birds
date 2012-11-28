@@ -54,6 +54,26 @@
 
 \end{frame}
 
+\begin{frame}{Why Use Diffusion?}
+  \begin{itemize}
+  \item Path Finding for arbitrary number of entities / goals
+  \item Complexity is constant as entities and goals increase
+  \item By using multiple diffusion layers and weights, complex behaviors emerge
+    \begin{itemize}
+    \item Division of Labor
+    \item Simultaneous Goals
+    \item Dynamic goal-changing based on circumstance
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+\begin{frame}{Basic algorithm}
+ For each diffusion layer:\\
+Set all grid cells containing entities that effect the layer to 1; all other cells are set to 0\\
+     For NumIterations:\\
+         For each x, y in the diffusion matrix:\\
+             If environment[x][y] is not an obstacle:\\
+                 Set diffusionMatrix[x][y] = Sum of Neighboring Cells * Diffusion Rate\\
+\end{frame}
 
 \begin{frame}{Diffusion Algorithm}\fontsize{6pt}{7}\selectfont
  
@@ -98,7 +118,6 @@
 		\hline
 		  &  &  &  &  \\ \hline
 		  &  &  &  &  \\ \hline
-		  &  & \includegraphics[width=0.08in]{apple.png} & \cellcolor{black} &  \\ \hline
 		  &  &  & \cellcolor{black} &  \\ \hline
 		  &  &  & \cellcolor{black} &  \\ 
 		\hline
