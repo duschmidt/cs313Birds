@@ -7,7 +7,7 @@ import Tkinter as tk
 import numpy as np
 import Image
 import ImageTk
-import diffuse
+import diffuseD
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm, Colormap
 from random import randint
@@ -116,7 +116,7 @@ class Game(tk.Frame):
 		self.height=height
 		self.width=width
 		self.mapFile = mapFile
-		self.diffuseMetrics = self.diffuseDustin
+		self.diffuseMetrics = self.diffuseKarl
 		self.createWidgets()
 		self.pack()
 		self.setup()
@@ -130,7 +130,6 @@ class Game(tk.Frame):
 		self.initObstacles()
 		self.initMetrics()
 		
-
 	def createWidgets(self):
 		"""Creates Tkinter UI elements"""
 		self.Surface = tk.Canvas(self, width=self.width, height=self.height, bg="#FFFFFF")
@@ -165,7 +164,7 @@ class Game(tk.Frame):
 		gameMap = np.loadtxt(mapFile,dtype='c')
 		self.shape = gameMap.shape
 		self.entities = np.empty(gameMap.shape, dtype=object)
-		self.obstacles = np.ones(gameMap.shape)
+		self.obstacles = np.ones(gameMap.shape, dtype=float)
 		self.cellsize = self.cellToPixel(1, 1)
 		for row in range(self.shape[0]):
 			for col in range(self.shape[1]):
@@ -226,14 +225,18 @@ class Game(tk.Frame):
 			for k, v in entMetrics.items():
 				self.metrics[k]['seed'][row,col] = v
 
-
 	def diffuseKarl(self):
 		"""Diffuse each metric layer"""
 		for name, data in self.metrics.items():
 			# call C diffusion extension
-			data['diffused'] = diffuse.diffuse(data['iters'], data['rate'], data['seed'], self.obstacles)
+			data['diffused'] = diffuseD.diffuseD(data['iters'], data['rate'], data['seed'], data['diffused'], self.obstacles, self.neighborCoeff)
 
 	def diffuseDustin(self):
+		# for name, data in self.metrics.items():
+		# 	# call C diffusion extension
+		# 	data['diffused'] = diffuseD.diffuse(data['iters'], data['rate'], data['seed'], self.obstacles)
+
+
 		for name, data in self.metrics.items():
 			seed = data['seed']
 			rate = data['rate']
@@ -246,9 +249,10 @@ class Game(tk.Frame):
 
 	def sumOfNeighbors(self, a):
 		new = np.zeros(a.shape)
+		#new = np.roll(a,1,0)+np.roll(a,1,1)+np.roll(a,-1,0)+np.roll(a,-1,1)
 		new = np.roll(a,1,0)+np.roll(a,1,1)+np.roll(a,-1,0)+np.roll(a,-1,1)
+		new += np.roll(np.roll(a,1,0),-1,1)+np.roll(np.roll(a,1,0),1,1)+np.roll(np.roll(a,-1,0),-1,1)+np.roll(np.roll(a,-1,0),1,1)
 		return new
-
 
 	def getNeighborhood(self,row,col):
 		"""Returns a 3 X 3 matrix centered around row, col with all metric diffusion values"""
@@ -297,7 +301,6 @@ class Game(tk.Frame):
 		if not self.paused:
 			self.Surface.after(self.deltaT,self.mainLoop)
 
-
 	def draw(self):
 		"""Takes care of all visual rendering/updating"""
 		coords = np.nonzero(self.entities)
@@ -309,8 +312,6 @@ class Game(tk.Frame):
 		self.drawText()
 		self.Surface.update()
 		if self.showPlot: self.plot()
-		
-
 
 	def drawText(self):
 		"""Draw text indicating the ammount of each Insert Entity left"""
@@ -407,4 +408,4 @@ class Game(tk.Frame):
 		"""Handles right click events"""
 		self.click(event, 2)
 
-g = Game(mapFile = "map3.map")
+g = Game(mapFile = "map1.map")

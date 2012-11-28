@@ -1,6 +1,6 @@
 {
  'Metrics':{
- 			'FoodMetric':{'rate':0.9,'iters':1},
+ 			'FoodMetric':{'rate':0.2,'iters':1},
 		    'BirdMetric':{'rate':0.9,'iters':15},
 		    'HawkMetric':{'rate':0.7,'iters':15},
 		    'NestMetric':{'rate':0,  'iters':0}
