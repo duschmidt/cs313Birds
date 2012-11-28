@@ -107,14 +107,14 @@ static PyObject *diffuseD(PyObject *self, PyObject *args) {
                     down = row + 1 >= numRows ? 0 : row + 1;
                     //diff = rate*self.neighborCoeff*self.sumOfNeighbors(diff)*mask + seed
                     // final diffusion value for col, row is the sum of neighbors times diffusion rate
-                    cResultArray[col][row] = rate * (cDiffusedArray[left][row] +
+                    cResultArray[col][row] = rate*0.125 * (cDiffusedArray[left][row] +
                                                      cDiffusedArray[right][row] +
                                                      cDiffusedArray[col][up] +
                                                      cDiffusedArray[col][down] +
                                                      cDiffusedArray[left][up] +
                                                      cDiffusedArray[left][down]+
                                                      cDiffusedArray[right][up]+
-                                                     cDiffusedArray[right][down])* cCoeffArray[col][row];
+                                                     cDiffusedArray[right][down]);
                 }
                 else if(cMetricArray[col][row] != 0.0){
                     cResultArray[col][row] = cMetricArray[col][row];

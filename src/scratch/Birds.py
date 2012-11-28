@@ -8,6 +8,7 @@ import numpy as np
 import Image
 import ImageTk
 import diffuse
+import diffuseD
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm, Colormap
 from random import randint
@@ -116,7 +117,7 @@ class Game(tk.Frame):
 		self.height=height
 		self.width=width
 		self.mapFile = mapFile
-		self.diffuseMetrics = self.diffuseKarl
+		self.diffuseMetrics = self.diffuseDustin
 		self.createWidgets()
 		self.pack()
 		self.setup()
@@ -232,20 +233,20 @@ class Game(tk.Frame):
 			data['diffused'] = diffuse.diffuse(data['iters'], data['rate'], data['seed'], self.obstacles)
 
 	def diffuseDustin(self):
-		# for name, data in self.metrics.items():
-		# 	# call C diffusion extension
-		# 	data['diffused'] = diffuse.diffuse(data['iters'], data['rate'], data['seed'], self.obstacles)
-
-
 		for name, data in self.metrics.items():
-			seed = data['seed']
-			rate = data['rate']
-			itr = data['iters']
-			diff = data['diffused']
-			mask = np.logical_not(seed)
-			for i in range(itr):
-				diff = rate*self.neighborCoeff*self.sumOfNeighbors(diff)*mask + seed
-			self.metrics[name]['diffused']=diff
+			# call C diffusion extension
+			data['diffused'] = diffuseD.diffuseD(data['iters'], data['rate'], data['seed'], data['diffused'], self.obstacles, self.neighborCoeff)
+
+
+		# for name, data in self.metrics.items():
+		# 	seed = data['seed']
+		# 	rate = data['rate']
+		# 	itr = data['iters']
+		# 	diff = data['diffused']
+		# 	mask = np.logical_not(seed)
+		# 	for i in range(itr):
+		# 		diff = rate*self.neighborCoeff*self.sumOfNeighbors(diff)*mask + seed
+		# 	self.metrics[name]['diffused']=diff
 
 	def sumOfNeighbors(self, a):
 		new = np.zeros(a.shape)
