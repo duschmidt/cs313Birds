@@ -295,12 +295,10 @@ class Game(tk.Frame):
 		if self.checkWin():
 			self.setup()
 		else:
-                        if not self.paused:
-                                self.update()
+			if not self.paused:
+				self.update()
 			self.draw()
 
-		if not self.paused:
-			self.Surface.after(self.deltaT,self.mainLoop)
 
 	def draw(self):
 		"""Takes care of all visual rendering/updating"""
@@ -385,7 +383,8 @@ class Game(tk.Frame):
 			self.plot()
 		elif event.char == "s":
 			self.paused = True
-			self.mainLoop()
+			self.update()
+			self.draw()
 		elif event.char == "d":
 			if self.diffuseMetrics == self.diffuseDustin:
 				self.diffuseMetrics = self.diffuseKarl
