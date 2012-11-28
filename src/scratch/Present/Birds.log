@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2011.10.14)  27 NOV 2012 22:16
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2011.10.14)  28 NOV 2012 07:51
 entering extended mode
  %&-line parsing enabled.
 **Birds.tex
@@ -1103,14 +1103,14 @@ File: umsb.fd 2009/06/22 v3.00 AMS symbols B
 ] [4
 
 ]
-<Bird_Forces.pdf, id=117, 642.31969pt x 401.44983pt>
+<Bird_Forces.pdf, id=118, 642.31969pt x 401.44983pt>
 File: Bird_Forces.pdf Graphic file (type pdf)
  <use Bird_Forces.pdf>
-<Bird_Forces_Multiple.pdf, id=118, 642.31969pt x 401.44983pt>
+<Bird_Forces_Multiple.pdf, id=119, 642.31969pt x 401.44983pt>
 File: Bird_Forces_Multiple.pdf Graphic file (type pdf)
 
 <use Bird_Forces_Multiple.pdf>
-Overfull \hbox (10.69768pt too wide) in paragraph at lines 74--74
+Overfull \hbox (10.69768pt too wide) in paragraph at lines 79--79
 [][][]  
  []
 
@@ -1124,39 +1124,39 @@ Overfull \hbox (10.69768pt too wide) in paragraph at lines 74--74
 <apple.pdf, id=217, 200.72491pt x 200.72491pt>
 File: apple.pdf Graphic file (type pdf)
  <use apple.pdf>
-Overfull \hbox (3.61372pt too wide) in paragraph at lines 159--159
+Overfull \hbox (3.61372pt too wide) in paragraph at lines 164--164
 []|[]| 
  []
 
 
-Underfull \hbox (badness 1389) in paragraph at lines 159--159
+Underfull \hbox (badness 1389) in paragraph at lines 164--164
 \OT1/cmss/m/n/6 food item placed on a non-
  []
 
 
-Underfull \hbox (badness 1264) in paragraph at lines 159--159
+Underfull \hbox (badness 1264) in paragraph at lines 164--164
 []|\OT1/cmss/m/n/6 A nu-meric ma-trix with 0 at
  []
 
 [8
 
  <./apple.pdf>]
-Underfull \hbox (badness 2073) in paragraph at lines 201--201
+Underfull \hbox (badness 2073) in paragraph at lines 206--206
 []|\OT1/cmss/m/n/6 A mask to pre-vent dif-fu-sion
  []
 
 
-Underfull \hbox (badness 2073) in paragraph at lines 201--201
+Underfull \hbox (badness 2073) in paragraph at lines 206--206
 []|\OT1/cmss/m/n/6 A mask to pre-vent dif-fu-sion
  []
 
 
-Underfull \hbox (badness 2073) in paragraph at lines 201--201
+Underfull \hbox (badness 2073) in paragraph at lines 206--206
 []|\OT1/cmss/m/n/6 A mask to pre-vent dif-fu-sion
  []
 
 
-Overfull \hbox (29.02377pt too wide) in paragraph at lines 201--201
+Overfull \hbox (29.02377pt too wide) in paragraph at lines 206--206
 [][]  
  []
 
@@ -1185,11 +1185,11 @@ LaTeX Font Warning: Size substitutions with differences
 
  ) 
 Here is how much of TeX's memory you used:
- 15503 strings out of 495061
- 282614 string characters out of 1182620
- 368701 words of memory out of 3000000
- 18239 multiletter control sequences out of 15000+50000
- 11559 words of font info for 43 fonts, out of 3000000 for 9000
+ 15511 strings out of 495061
+ 282719 string characters out of 1182620
+ 368700 words of memory out of 3000000
+ 18247 multiletter control sequences out of 15000+50000
+ 13620 words of font info for 51 fonts, out of 3000000 for 9000
  28 hyphenation exceptions out of 8191
  49i,21n,53p,394b,545s stack positions out of 5000i,500n,10000p,200000b,50000s
 </usr/share/texmf-texlive/fonts/type1/public/amsfonts/cmextra/cmex7.pfb></usr
@@ -1205,7 +1205,7 @@ nts/type1/public/amsfonts/cm/cmsy6.pfb></usr/share/texmf-texlive/fonts/type1/pu
 blic/amsfonts/symbols/msam10.pfb></usr/share/texmf-texlive/fonts/type1/public/a
 msfonts/symbols/msam7.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts
 /symbols/msbm7.pfb>
-Output written on Birds.pdf (12 pages, 278820 bytes).
+Output written on Birds.pdf (12 pages, 279495 bytes).
 PDF statistics:
  398 PDF objects out of 1000 (max. 8388607)
  25 named destinations out of 1000 (max. 500000)

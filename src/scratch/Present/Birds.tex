@@ -59,11 +59,16 @@
   \begin{itemize}
   \item Path Finding for arbitrary number of entities / goals
   \item Complexity is constant as entities and goals increase
+  \begin{itemize}
+    \item Diffusion is $O(nc)$, where $n$ is the number of iterations and $c$ is the number of cells in the map
+    \item Once the scent is diffused, each agent make a movement choice in $O(1)$ time
+  \end{itemize}
   \item By using multiple diffusion layers and weights, complex behaviors emerge
     \begin{itemize}
     \item Division of Labor
     \item Simultaneous Goals
     \item Dynamic goal-changing based on circumstance
+    \item Biological Plausibility
     \end{itemize}
   \end{itemize}
 \end{frame}
