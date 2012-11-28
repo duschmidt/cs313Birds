@@ -1,8 +1,8 @@
 {
  'Metrics':{
- 			'FoodMetric':{'rate':0.9,'iters':10},
-		    'BirdMetric':{'rate':0.9,'iters':15},
-		    'HawkMetric':{'rate':0.7,'iters':15},
+ 			'FoodMetric':{'rate':0.1,'iters':300},
+		    'BirdMetric':{'rate':0.1,'iters':200},
+		    'HawkMetric':{'rate':0.05,'iters':200},
 		    'NestMetric':{'rate':0,  'iters':0}
 		   },
  'Entities':{
