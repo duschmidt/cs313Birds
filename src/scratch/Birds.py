@@ -180,7 +180,7 @@ class Game(tk.Frame):
 			f.close()
 		except: #load the default gameData file
 			print "Using default gamedata"
-			dataFile = "map.data"
+			dataFile = "maps/map.data"
 			f = open(dataFile)
 			gameData = eval(f.read())
 			f.close()
@@ -317,7 +317,7 @@ class Game(tk.Frame):
 				value = np.sum(self.metrics[k]['seed'])
 				#print value
 				if value >= v:
-					print "YOU WIN!"
+					
 					return True
 		return False
 
@@ -438,5 +438,5 @@ class Game(tk.Frame):
 		"""Handles right click events"""
 		self.click(event, 2)
 
-g = Game(mapFile = "map2.map")
+g = Game(mapFile = "maps/map2.map")
 g.mainloop()
