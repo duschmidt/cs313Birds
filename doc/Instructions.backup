@@ -1,0 +1,51 @@
+\documentclass[a4paper,10pt]{article}
+%\documentclass[a4paper,10pt]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\title{Birds Build Instructions}
+\author{Dustin Schmidt}
+\date{30, November 2012}
+
+\pdfinfo{%
+  /Title    (Birds - Build)
+  /Author   (Dustin Schmidt)
+  /Creator  ()
+  /Producer ()
+  /Subject  ()
+  /Keywords ()
+}
+
+\begin{document}
+\maketitle
+
+\section{Installing Python}
+\subsection[short]{Easiest - Enthought Python Distribution}
+The easiest method to install Python and all of the dependent libraries that are required by Birds is to use the free \href{http://epd-free.enthought.com/?Download=Download+EPD+Free+7.3-2}{Enthought Python Distribution}  This includes the Python interpreter as well as Numpy, Matplotlib and numerous other powerful libraries for scientific computing.
+\subsection[short]{Standard/Existing Python installation} The \href{http://python.org/download/}{Standard Python Interpreter (version 2.7)} is another option for running Birds.  Python can be downloaded at the link given or an existing installation of Python 2.7 may be used but the dependent libraries must be present.  See \ref{sec:dep} for more information.
+
+\section{Installing Dependencies}\label{sec:dep}
+Using the \href{http://epd-free.enthought.com/?Download=Download+EPD+Free+7.3-2}{Enthought Python Distribution} precludes the information in this section.
+\subsection{Numpy}
+\begin{description}
+ \item [Overview] Short for numerical python, numpy is used to provide considerably more efficient array manipulation functionality.  In addition to added efficiency, numpy provides very convenient array operators which were significantly helpful in implementing the metric diffusion algorithm.
+ \item[Installer] \url{http://sourceforge.net/projects/numpy/files/NumPy/1.7.0b2/}
+ \item[Linux] python-numpy \\ Example: \begin{verbatim}sudo apt-get install python-numpy\end{verbatim}
+ \end{description}
+\subsection{Matplotlib} 
+\begin{description}
+\item[Overview]This library provides powerful, easy to use though highly configurable plotting tools that closely emulate what can be accomplished with Matlab.
+\item[Installer] \url{https://github.com/matplotlib/matplotlib/downloads/}
+\item[Linux] python-matplotlib \\ Example: \begin{verbatim}sudo apt-get install python-matplotlib\end{verbatim}
+                                                                                                    
+\end{description}
+
+
+\section{Building C extensions - Optional}
+The diffusion algorithm used by Birds has been implemented both in Python directly and as a much more performant extension of Numpy written in C.  The C code used to build the extension must be compiled for use on the destination machine's operating system.  Python utilities have been used to simplify the build process as described in this section but this process is dependent on the presence of a compatible compiler on the destination machine.  Last minute testing on a standard (ie non-development oriented) Windows system running the Enthought Python Distribution revealed that the presence of a compatible compiler may not be assumed.  To circumvent this complexity the Birds application has been modified to use the compiled C extension only if it is present.  If the C extension is not present then the less performant true Python implementation of the diffusion algorithm will be used, thus making the build of the C extension an optional step.  The performance gains accomplished by the C extension are significant but the true Python version is more than sufficient.
+
+\section{Executing Birds}
+
+
+
+\end{document}
