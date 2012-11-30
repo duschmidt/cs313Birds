@@ -1,6 +1,4 @@
-# KH: All code in this file is original.
-# KH: Various Tkinter / matplotlib usage was adapted from various sources,
-# KH: but no significant portions were used directly.
+# KH/DS: All code in this file is original.
 
 import sys
 
@@ -133,6 +131,7 @@ class Entity():
 		return effect
 
 class Game(tk.Frame):
+
 	def __init__(self, master=tk.Tk(), height=700, width=700, mapFile = "map1.map"):
 		tk.Frame.__init__(self, master)
 		self.master = master

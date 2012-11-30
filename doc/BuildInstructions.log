@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian) (format=pdflatex 2012.11.10)  30 NOV 2012 11:12
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian) (format=pdflatex 2012.11.10)  30 NOV 2012 15:24
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**Instructions.tex
-(./Instructions.tex
+**BuildInstructions.tex
+(./BuildInstructions.tex
 LaTeX2e <2011/06/27>
 Babel <v3.8m> and hyphenation patterns for english, dumylang, nohyphenation, lo
 aded.
@@ -358,8 +358,8 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 )
 \Hy@SectionHShift=\skip43
 )
-(./Instructions.aux)
-\openout1 = `Instructions.aux'.
+(./BuildInstructions.aux)
+\openout1 = `BuildInstructions.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 19.
 LaTeX Font Info:    ... okay on input line 19.
@@ -390,9 +390,9 @@ LaTeX Info: Redefining \ref on input line 19.
 LaTeX Info: Redefining \pageref on input line 19.
 LaTeX Info: Redefining \nameref on input line 19.
 
-(./Instructions.out) (./Instructions.out)
+(./BuildInstructions.out) (./BuildInstructions.out)
 \@outlinefile=\write3
-\openout3 = `Instructions.out'.
+\openout3 = `BuildInstructions.out'.
 
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <12> on input line 21.
@@ -413,32 +413,32 @@ Overfull \hbox (6.24155pt too wide) in paragraph at lines 32--33
 [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 68.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 69.
  [3]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 68.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 69.
 
-(./Instructions.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 68.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 68.
-Package rerunfilecheck Info: File `Instructions.out' has not changed.
+(./BuildInstructions.aux)
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 69.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 69.
+Package rerunfilecheck Info: File `BuildInstructions.out' has not changed.
 (rerunfilecheck)             Checksum: DE812B2A10174EE3B2151A90A2BC1445;752.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 68.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 69.
  ) 
 Here is how much of TeX's memory you used:
  4363 strings out of 495059
- 64097 string characters out of 3182029
- 142584 words of memory out of 3000000
+ 64162 string characters out of 3182029
+ 140584 words of memory out of 3000000
  7538 multiletter control sequences out of 15000+200000
  8063 words of font info for 29 fonts, out of 3000000 for 9000
  14 hyphenation exceptions out of 8191
- 29i,6n,28p,1083b,394s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 29i,6n,28p,1046b,376s stack positions out of 5000i,500n,10000p,200000b,50000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/shar
 e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texli
 ve/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texlive/texm
 f-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/share/texlive/texmf-dist/
 fonts/type1/public/amsfonts/cm/cmtt10.pfb>
-Output written on Instructions.pdf (3 pages, 87935 bytes).
+Output written on BuildInstructions.pdf (3 pages, 88062 bytes).
 PDF statistics:
  106 PDF objects out of 1000 (max. 8388607)
  94 compressed objects within 1 object stream
