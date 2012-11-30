@@ -7,7 +7,12 @@ import Tkinter as tk
 import numpy as np
 import Image
 import ImageTk
-import diffuseD
+try:
+	import diffuseD as cDiffusion
+	print "C based diffusion was found, using it!"
+except:
+	cDiffusion = None
+	print "Unable to find c diffusion on system, using slower python diffusion"
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm, Colormap
 from random import randint
@@ -257,16 +262,14 @@ class Game(tk.Frame):
 
 	def diffuseKarl(self):
 		"""Diffuse each metric layer"""
-		for name, data in self.metrics.items():
+		try:
+			for name, data in self.metrics.items():
 			# call C diffusion extension
-			data['diffused'] = diffuseD.diffuseD(data['iters'], data['rate'], data['seed'], data['diffused'], self.obstacles, self.neighborCoeff)
+				data['diffused'] = cDiffusion.diffuseD(data['iters'], data['rate'], data['seed'], data['diffused'], self.obstacles, self.neighborCoeff)
+		except:
+			return self.diffuseDustin()
 
 	def diffuseDustin(self):
-		# for name, data in self.metrics.items():
-		# 	# call C diffusion extension
-		# 	data['diffused'] = diffuseD.diffuse(data['iters'], data['rate'], data['seed'], self.obstacles)
-
-
 		for name, data in self.metrics.items():
 			seed = data['seed']
 			rate = data['rate']
