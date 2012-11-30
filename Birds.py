@@ -19,7 +19,7 @@ except:
 	sys.exit(2)
 
 try:
-	import diffuseD as cDiffusion
+	import diffuse as cDiffusion
 	print "C based diffusion was found, using it!"
 except:
 	cDiffusion = None

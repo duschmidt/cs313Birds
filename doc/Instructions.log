@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian) (format=pdflatex 2012.11.10)  30 NOV 2012 09:06
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian) (format=pdflatex 2012.11.10)  30 NOV 2012 11:12
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**Instructions
-(./Instructions
+**Instructions.tex
+(./Instructions.tex
 LaTeX2e <2011/06/27>
 Babel <v3.8m> and hyphenation patterns for english, dumylang, nohyphenation, lo
 aded.
@@ -426,12 +426,12 @@ Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 68.
  ) 
 Here is how much of TeX's memory you used:
  4363 strings out of 495059
- 64089 string characters out of 3182029
+ 64097 string characters out of 3182029
  142584 words of memory out of 3000000
  7538 multiletter control sequences out of 15000+200000
  8063 words of font info for 29 fonts, out of 3000000 for 9000
  14 hyphenation exceptions out of 8191
- 29i,6n,28p,1079b,394s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 29i,6n,28p,1083b,394s stack positions out of 5000i,500n,10000p,200000b,50000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/shar
 e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texli
