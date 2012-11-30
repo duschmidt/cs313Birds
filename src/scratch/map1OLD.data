@@ -10,7 +10,7 @@
 					 ,'Weights':{} #: List of weights for each metric, food has none
 					 ,'MapChar':'F' #: Character that represents this entitiy in a map
 					 ,'Image':'apple.png' #: The image file to use for food 
-					 ,'Affects':{'FoodMetric':1} #: A dictionary of layers this entitiy effects, food affects the FoodMetric layer
+					 ,'Affects':{'FoodMetric':10} #: A dictionary of layers this entitiy effects, food affects the FoodMetric layer
 					 ,'Moves':False #: Boolean indiciating whether this entity moves, spares some processing for static entities
 					},
 			'Bird':{ 'Eats':['Food'],

@@ -11,6 +11,7 @@ import diffuseD
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm, Colormap
 from random import randint
+import tkFileDialog as tkf
 
 #: Keep an array of relative moves, each element is a two tuple corresponding to an x/y relative move of a game entity
 moves = [(-1, -1), (-1, 0), (-1, 1),
@@ -89,7 +90,7 @@ class Entity():
 		move = moves[maxAt] #find the move to the cell with max value
 		if move[0] == 0 and move[1] == 0:
 			# moving entities never just stay put.  choose random direction instead.
-			pass#move = (randint(-1,1),randint(-1,1))
+			move = (randint(-1,1),randint(-1,1))
 
 		return move
 
@@ -121,23 +122,52 @@ class Game(tk.Frame):
 		self.pack()
 		self.setup()
 		self.draw()
+		self.alarm=None
 		if not self.paused:
-			self.mainLoop()
+			self.mainlooop()
 
 	def setup(self):
+		self.Surface.delete(tk.ALL)
 		self.loadMap(mapFile = self.mapFile)
 		self.initEntities()
 		self.initObstacles()
 		self.initMetrics()
+
+	def shutdown(self):
+		if self.showPlot:
+			plt.close()
+			self.showPlot = False
+
+		if self.alarm != None:
+			self.Surface.after_cancel(self.alarm)
+
+		self.master.quit()
+
 		
 	def createWidgets(self):
 		"""Creates Tkinter UI elements"""
+		self.master.protocol("WM_DELETE_WINDOW", self.shutdown)
+		self.menubar = tk.Menu(self.master)
+		
+		fileMenu = tk.Menu(self.menubar, tearoff=0)
+		fileMenu.add_command(label='Open', command=self.openMapDialog)
+		self.menubar.add_cascade(label="File", menu=fileMenu)
+		self.master.config(menu=self.menubar)
+
 		self.Surface = tk.Canvas(self, width=self.width, height=self.height, bg="#FFFFFF")
 		self.Surface.bind("<Button-1>", self.leftClick)
 		self.Surface.bind("<Button-2>", self.midClick)
 		self.Surface.bind("<Button-3>", self.rightClick)
 		self.master.bind("<Key>",self.keyPress)
 		self.Surface.pack()
+
+	def openMapDialog(self):
+		print "ReadFile"
+		fileName = tkf.askopenfilename(filetypes=[('Game map file','*.map')])
+		if fileName != ():
+			self.mapFile = fileName
+			self.setup()
+
 
 	def loadMap(self, mapFile='map1.map'):
 		"""Loads a map layout from a file given by mapFile
@@ -291,15 +321,14 @@ class Game(tk.Frame):
 					return True
 		return False
 
-	def mainLoop(self):
+	def mainlooop(self):
 		if self.checkWin():
 			self.setup()
-		else:
+		elif not self.paused:
 			self.update()
 			self.draw()
 
-		if not self.paused:
-			self.Surface.after(self.deltaT,self.mainLoop)
+		self.alarm = self.Surface.after(self.deltaT,self.mainlooop)
 
 	def draw(self):
 		"""Takes care of all visual rendering/updating"""
@@ -378,13 +407,14 @@ class Game(tk.Frame):
 		"""Handles keypress events"""
 		if event.char == "p":
 			self.paused = not self.paused
-			self.mainLoop()
+			self.mainlooop()
 		elif event.char == "t":
 			self.showPlot = not self.showPlot
 			self.plot()
 		elif event.char == "s":
 			self.paused = True
-			self.mainLoop()
+			self.update()
+			self.draw()
 		elif event.char == "d":
 			if self.diffuseMetrics == self.diffuseDustin:
 				self.diffuseMetrics = self.diffuseKarl
@@ -408,4 +438,5 @@ class Game(tk.Frame):
 		"""Handles right click events"""
 		self.click(event, 2)
 
-g = Game(mapFile = "map1.map")
+g = Game(mapFile = "map2.map")
+g.mainloop()
