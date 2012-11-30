@@ -3,20 +3,43 @@
 # KH: but no significant portions were used directly.
 
 import sys
-import Tkinter as tk
-import numpy as np
-import Image
-import ImageTk
+
+try:
+	import Image
+except:
+	print "Unable to import Python Image Library, is it installed"
+	sys.exit(2)
+
+try:
+	import Tkinter as tk
+	import ImageTk
+	import tkFileDialog as tkf
+except:
+	print "Unable to import Tkinter GUI utilities.  Do you have a full, standard python installation?\n Some default linux python installs do not include tkinter"
+	sys.exit(2)
+
 try:
 	import diffuseD as cDiffusion
 	print "C based diffusion was found, using it!"
 except:
 	cDiffusion = None
 	print "Unable to find c diffusion on system, using slower python diffusion"
-import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm, Colormap
+
+try:
+	import numpy as np
+except:
+	print "Unable to import numpy.  Is it installed?"
+	sys.exit(2)
+
+try:
+	import matplotlib.pyplot as plt
+	from matplotlib.colors import LogNorm, Colormap
+except:
+	print "Unable to load matplotlib.  Is it installed?"
+	sys.exit(2)
+
 from random import randint
-import tkFileDialog as tkf
+
 
 #: Keep an array of relative moves, each element is a two tuple corresponding to an x/y relative move of a game entity
 moves = [(-1, -1), (-1, 0), (-1, 1),

@@ -30,13 +30,13 @@ Using the \href{http://epd-free.enthought.com/?Download=Download+EPD+Free+7.3-2}
 \begin{description}
  \item [Overview] Short for numerical python, numpy is used to provide considerably more efficient array manipulation functionality.  In addition to added efficiency, numpy provides very convenient array operators which were significantly helpful in implementing the metric diffusion algorithm.
  \item[Installer] \url{http://sourceforge.net/projects/numpy/files/NumPy/1.7.0b2/}
- \item[Linux] python-numpy \\ Example: \begin{verbatim}sudo apt-get install python-numpy\end{verbatim}
+ \item[Linux Package] python-numpy \\ Example: \begin{verbatim}sudo apt-get install python-numpy\end{verbatim}
  \end{description}
 \subsection{Matplotlib} 
 \begin{description}
 \item[Overview]This library provides powerful, easy to use though highly configurable plotting tools that closely emulate what can be accomplished with Matlab.
 \item[Installer] \url{https://github.com/matplotlib/matplotlib/downloads/}
-\item[Linux] python-matplotlib \\ Example: \begin{verbatim}sudo apt-get install python-matplotlib\end{verbatim}
+\item[Linux Package] python-matplotlib \\ Example: \begin{verbatim}sudo apt-get install python-matplotlib\end{verbatim}
                                                                                                     
 \end{description}
 
