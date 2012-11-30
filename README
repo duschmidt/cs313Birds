@@ -1,11 +1,9 @@
-Birds requires the following libraries:
-    *Pygame
-    *numpy
-    *scipy
+To run, use:
+➜ python Birds.py
 
-To install these libraries, use:
-
-➜ sudo apt-get install python-pip 
-➜ sudo apt-get install libatlas-base-dev gfortran
-➜ sudo pip install scipy
-➜ sudo apt-get install python-pygame
+Left click places food
+Right click pauses the game
+keypress 'p' activates plotting
+keypress 'f' sets food as plot parameter
+keypress 'b' sets bird as plot parameter
+keypress 'h' sets hawk as plot parameter
