@@ -4,7 +4,9 @@
 \usepackage{default}
 \usepackage{amsmath}
 \usepackage{color, colortbl}
-\usepackage{algorithm, verbatim}
+\usepackage{algorithm}
+\usepackage{verbatim}
+
 \usepackage{algpseudocode}
 \newcolumntype{L}{>{\arraybackslash}m{3cm}}
 
@@ -16,155 +18,159 @@
 
 \begin{frame}{Game Overview}
   \begin{itemize}
-    \item Game Rules
-      \begin{itemize}
+  \item Game Rules
+    \begin{itemize}
 	\item Birds pursue and eat food
 	\item Hawks pursue and eat Birds
 	\item Birds flee Hawks
 	\item Player strategically places food to guide Birds to the Nest
-      \end{itemize}
-    \item Scoring
-      \begin{itemize}
+    \end{itemize}
+  \item Scoring
+    \begin{itemize}
 	\item Some number of birds reach the nest
 	\item Birds eat some number of food items
-      \end{itemize}
-    \item AI Mechanism
-      \begin{itemize}
+    \end{itemize}
+  \item AI Mechanism
+    \begin{itemize}
 	\item Decisive Pathfinding
 	\item Allow Birds to find Food
 	\item Allow Hawks to find Birds
 	\item Allow Birds to flee Hawks
-      \end{itemize}
+    \end{itemize}
   \end{itemize} 
 
 \end{frame}
 
 \begin{frame}{AI Overview}
   \begin{itemize}
-    \item Extension of Collaborative Diffusion
-    \item Model reality by diffusing metrics about pursued agents throughout environment
-    \item Agents can affect different metric layers
-    \item Agents make decisions based on metrics in their immediate neighborhood
-      \begin{itemize}
+  \item Extension of Collaborative Diffusion
+  \item Model reality by diffusing metrics about pursued agents throughout environment
+  \item Agents can affect different metric layers
+  \item Agents make decisions based on metrics in their immediate neighborhood
+    \begin{itemize}
 	\item Agents compute a weighted summation of various metric layers
 	\item Agents of different types can weight metrics differently (including negative weights)
 	\item Agents move to the maximum valued cell after weighted summation
-      \end{itemize}
+    \end{itemize}
   \end{itemize}
 
 \end{frame}
 
+\begin{frame}{Why Use Diffusion?}
+  \begin{itemize}
+  \item Path Finding for arbitrary number of entities / goals
+  \item Complexity is constant as entities and goals increase
+  \item By using multiple diffusion layers and weights, complex behaviors emerge
+    \begin{itemize}
+    \item Division of Labor
+    \item Simultaneous Goals
+    \item Dynamic goal-changing based on circumstance
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Example: Flocking behavior}
+  \includegraphics[width=2.2in]{Bird_Forces.pdf}
+  \includegraphics[width=2.2in]{Bird_Forces_Multiple.pdf}
+\end{frame}
+
+\begin{frame}{Basic algorithm}
+  For each diffusion layer: \textcolor{red}{$//$Food, Explore, Bird, Etc.}\\
+  \ \ $diffusionMatrix[pos. of every entity in layer] := maxDiffusion$\\
+  \ \ \textcolor{red}{$//maxDiffusion == 1$, usually.  This is called the 'seed'}\\
+  \ \ All other cells are set to 0\\
+  \ \ \ \ For NumIterations:  \textcolor{red}{$//$how many times to diffuse the entire layer}\\
+  \ \ \ \ \ \ For each $x$, $y$ in $diffusionMatrix$:\\
+  \ \ \ \ \ \ \ \ If $environment[x][y]$ is not an obstacle:\\
+  \ \ \ \ \ \ \ \ \ \ Set $diffusionMatrix[x][y]$ = Sum of Neighboring Cells * $diffusionRate$\\
+\end{frame}
 
 \begin{frame}{Diffusion Algorithm}\fontsize{6pt}{7}\selectfont
- 
- \begin{itemize}\fontsize{6pt}{7}\selectfont
-  \item Sum of Neighbors Operator: \\$ S(X): S_{i,j} = X_{i+1,j} + X_{i,j+1} + X_{i-1,j} + X_{i,j-1} $
+  
+  \begin{itemize}\fontsize{6pt}{7}\selectfont
+  \item Sum of Neighbors Operator: \\$ S(X): S_{i,j} = X_{i+1,j} + X_{i,j+1} + X_{i-1,j} + X_{i,j-1} + X_{i-1,j-1} + X_{i+1,j+1} + X{i+1,j-1} + X_{i-1,j+1}$
   \item Input for game map of size $m \times n$:
     \begin{itemize}\fontsize{6pt}{7}\selectfont
-     \item Metric Seed: $M_{m \times n}: M_{i,j} = \left\{ \begin{array}{rl}
-0 &\mbox{ if no metric seed exists at cell }(i,j) \\
-1 &\mbox{ otherwise}
-\end{array} \right.$ \\ The originating metric values to be diffused
-     \item Obstacle Mask: $O_{m \times n}: O_{i,j} \in \{0,1\} \forall i<m, j<n$ \\ A mask to hide obstacles.  Has value of 0 where obstacles exist, 1 everywhere else
-     \item Diffusion Matrix: $D\in \mathbb{R}_{m \times n}$ \\ Existing diffusion array to be further diffused.  Initially all zeros
-     \item Diffusion Rate: $d: d \in \mathbb{R},  d < 1$ \\ Diffusion rate scalar, controls how much one cell bleeds into another
-     \item Iteration count: $i: i \in \mathbb{Z}, i > 0$ \\ Numer of diffusion iterations to apply.  Controls rate at which metric diffuses through environment
+    \item Metric Seed: $M_{m \times n}: M_{i,j} = \left\{ \begin{array}{rl}
+          0 &\mbox{ if no metric seed exists at cell }(i,j) \\
+          1 &\mbox{ otherwise}
+        \end{array} \right.$ \\ The originating metric values to be diffused
+    \item Obstacle Mask: $O_{m \times n}: O_{i,j} = \left\{ \begin{array}{rl}
+          0 &\mbox{ for obstacle cells }(i,j) \\
+          1 &\mbox{ otherwise}
+        \end{array} \right.$ \\ A mask to hide obstacles.  Has value of 0 where obstacles exist, 1 everywhere else
+    \item Diffusion Matrix: $D\in \mathbb{R}_{m \times n}$ \\ Existing diffusion array to be further diffused.  Initially all zeros
+    \item Diffusion Rate: $d: d \in \mathbb{R},  d < 1$ \\ Diffusion rate scalar, controls how much one cell bleeds into another
+    \item Iteration count: $c: c \in \mathbb{Z}, c > 0$ \\ Numer of diffusion iterations to apply.  Controls rate at which metric diffuses through environment
     \end{itemize}
   \item Return Value: Diffusion Matrix: $\hat D \in \mathbb{R}_{m \times n}$: Metric seed values diffused
   \item Precomputed Values:
-      \begin{itemize}\fontsize{6pt}{7}\selectfont
+    \begin{itemize}\fontsize{6pt}{7}\selectfont
 	\item Metric Mask: $\bar M_{m \times n}: \bar M_{i,j} =  \left\{ \begin{array}{rl}
-1 &\mbox{ if $M_{i,j} = 0$} \\
-0 &\mbox{ otherwise}
-\end{array} \right.$ \\ A mask to hide metric seed cells.\\Need only be computed when $M$ changes a 0 valued cell to non-zero value.\\Has value of 0 where metric seeds exist, 1 everywhere else
-	\item Neighbor coefficient matrix: $\hat N\in \mathbb{R}_{m \times n}$ \\ Coefficients to compute the average of neighboring cells, has value of 0 for obstacles
-      \end{itemize}
+          1 &\mbox{ if $M_{i,j} = 0$} \\
+          0 &\mbox{ otherwise}
+        \end{array} \right.$ \\ A mask to hide metric seed cells.\\Need only be computed when $M$ changes a 0 valued cell to non-zero value.\\Has value of 0 where metric seeds exist, 1 everywhere else
+	\item NeighborCoefficient: $n=8$ count of neighboring cells used in diffusion
+    \end{itemize}
   \item Diffusion Algorithm ($\odot$ deonotes element-wise matrix multiplication):\\
-    $\hat D \leftarrow D$\\
-    FOR $j=1:i$\\
-    \ \ \ $\hat D \leftarrow \hat D + d (S(\hat D) \odot \bar{M} \odot \hat{N}) + M$ \\
+    FOR $k=1:c$\\
+    \ \ \ $\hat D \leftarrow \frac{d}{n} (S(D) \odot \bar{M}) + M$ \\
     RETURN $\hat D$
     
-   
-\end{itemize}
+    
+  \end{itemize}
 \end{frame}
 
 
 \begin{frame}{Diffusion Example}\fontsize{6pt}{7}\selectfont
 
-\begin{tabular}{lllL}
+  \begin{tabular}{lllL}
 
- Environment: & & \begin{tabular}{|p{0.03in}|p{0.03in}|p{0.03in}|p{0.03in}|p{0.03in}|}
-		\hline
-		  &  &  &  &  \\ \hline
-		  &  &  &  &  \\ \hline
-		  &  & \includegraphics[width=0.08in]{apple.png} & \cellcolor{black} &  \\ \hline
-		  &  &  & \cellcolor{black} &  \\ \hline
-		  &  &  & \cellcolor{black} &  \\ 
-		\hline
-	      \end{tabular} & Simple environment depicting a food item placed on a non-wrapping game map with obstacles \\ \\
-	      
-Metric Seed Matrix: & \( M = \) & \( 
-  \left[ \begin{array}{ccccc}
-         0 & 0 & 0 & 0 & 0 \\
-         0 & 0 & 0 & 0 & 0 \\
-         0 & 0 & 1 & 0 & 0 \\
-         0 & 0 & 0 & 0 & 0 \\
-         0 & 0 & 0 & 0 & 0 \\
-        \end{array}
-  \right]
-\) & A numeric matrix with 0 at empty cells and 1 at cells containing food
-\\ \\
-Metric Mask: & \( \bar M = \) & \(
-   \left[ \begin{array}{ccccc}
-         1 & 1 & 1 & 1 & 1 \\
-         1 & 1 & 1 & 1 & 1 \\
-         1 & 1 & 0 & 1 & 1 \\
-         1 & 1 & 1 & 1 & 1 \\
-         1 & 1 & 1 & 1 & 1 \\
-        \end{array}
-  \right]
-\) & A mask to prevent modifying values in food containing cells.  Helps ensure that values of diffusion array are bounded
+    Environment: & & \begin{tabular}{|p{0.03in}|p{0.03in}|p{0.03in}|p{0.03in}|p{0.03in}|}
+      \hline
+      &  &  &  &  \\ \hline
+      &  &  &  &  \\ \hline
+      &  & \includegraphics[width=0.08in]{apple.pdf} & \cellcolor{black} &  \\ \hline
+      &  &  & \cellcolor{black} &  \\ \hline
+      &  &  & \cellcolor{black} &  \\ 
+      \hline
+    \end{tabular} & Simple environment depicting a food item placed on a non-wrapping game map with obstacles \\ \\
+    
+    Metric Seed Matrix: & \( M = \) & \( 
+    \left[ \begin{array}{ccccc}
+        0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 1 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 \\
+      \end{array}
+    \right]
+    \) & A numeric matrix with 0 at empty cells and 1 at cells containing food
+    \\ \\
+    Metric Mask: & \( \bar M = \) & \(
+    \left[ \begin{array}{ccccc}
+        1 & 1 & 1 & 1 & 1 \\
+        1 & 1 & 1 & 1 & 1 \\
+        1 & 1 & 0 & 1 & 1 \\
+        1 & 1 & 1 & 1 & 1 \\
+        1 & 1 & 1 & 1 & 1 \\
+      \end{array}
+    \right]
+    \) & A mask to prevent modifying values in food containing cells.  Helps ensure that values of diffusion array are bounded \\ \\
 
-\end{tabular}
-\end{frame}
+      Obstacle Mask: &  \( O = \) & \( 
+    \left[ \begin{array}{ccccc}
+        1 & 1 & 1 & 1 & 1 \\
+        1 & 1 & 1 & 1 & 1 \\
+        1 & 1 & 1 & 0 & 1 \\
+        1 & 1 & 1 & 0 & 1 \\
+        1 & 1 & 1 & 0 & 1 \\
+      \end{array}
+    \right]
+    \) & A mask to prevent diffusion through obstacle cells
+    \\
 
-\begin{frame}{Diffusion Example}\fontsize{6pt}{7}\selectfont
- 
- \begin{tabular}{lllL}
-Obstacle Mask: &  \( O = \) & \( 
-   \left[ \begin{array}{ccccc}
-         1 & 1 & 1 & 1 & 1 \\
-         1 & 1 & 1 & 1 & 1 \\
-         1 & 1 & 1 & 0 & 1 \\
-         1 & 1 & 1 & 0 & 1 \\
-         1 & 1 & 1 & 0 & 1 \\
-        \end{array}
-  \right]
-\) & A mask to prevent diffusion through obstacle cells
-\\ \\
-Neighbor Count: &  \( N = S(O) = \) & \( 
-   \left[ \begin{array}{ccccc}
-         2 & 3 & 3 & 3 & 2 \\
-         3 & 4 & 4 & 3 & 3 \\
-         3 & 4 & 3 & 3 & 2 \\
-         3 & 4 & 3 & 2 & 2 \\
-         2 & 3 & 2 & 2 & 1 \\
-        \end{array}
-  \right]
-\) & A mask to prevent diffusion through obstacle cells \\ \\
-O/N Coefficient: &  \( \hat N_{i,j} = \frac{O_{i,j}}{N_{i,j}} = \) & \( 
-   \left[ \begin{array}{ccccc}
-         0.5 & 0.33 & 0.33 & 0.33 & 0.5 \\
-         0.33 & 0.25 & 0.25 & 0.33 & 0.33 \\
-         0.33 & 0.25 & 0.33 & 0 & 0.5 \\
-         0.33 & 0.25 & 0.33 & 0 & 0.5 \\
-         0.5 & 0.33 & 0.5 & 0 & 1 \\
-        \end{array}
-  \right]
-\) & A mask to prevent diffusion through obstacle cells \\
-
-\end{tabular}
+  \end{tabular}
 
 
 
@@ -174,16 +180,108 @@ O/N Coefficient: &  \( \hat N_{i,j} = \frac{O_{i,j}}{N_{i,j}} = \) & \(
 
 
 \begin{frame}{Agent Utilization of Metrics}
- 
+  \begin{itemize}
+   \item Agents are given an array of metric matrices representing the metrics of interest in their neighborhood of the game map
+   \item Neighborhood is an array of $3 \times 3$ matrices
+   \item Agents apply a scalar weight to each layer representing their strategy
+   \item Agents perform element-wise sum the weighted matrices
+   \item Agents select the maximum valued cell as their destination
+   
+  \end{itemize}
+
+  
+\end{frame}
+
+\begin{frame}[fragile]{Game Representation - Behavior}\fontsize{4pt}{4}\selectfont
+\begin{verbatim}
+ 'Metrics':{
+ 			'FoodMetric':{'rate':0.2,'iters':1},
+		    'BirdMetric':{'rate':0.9,'iters':15},
+		    'HawkMetric':{'rate':0.7,'iters':15},
+		    'NestMetric':{'rate':0,  'iters':0}
+		   },
+ 'Entities':{
+			'Food':{ 'Eats':[],
+					 'Weights':{},
+					 'MapChar':'F',
+					 'Image':'apple.png',
+					 'Affects':{'FoodMetric':1},
+					 'Moves':False,
+					 'StartSkill':0
+					},
+			'Bird':{ 'Eats':['Food'],
+					 'Weights':{
+					 			'FoodMetric':1,
+			   					'BirdMetric':0,
+			   					'HawkMetric':-1
+			   					},
+					 'MapChar':'B',
+					 'Image':'bird.png',
+					 'Affects':{'BirdMetric':'skill'},
+					 'Moves':True,
+					 'StartSkill':1
+					},
+			'Hawk':{ 'Eats':['Bird', 'Food'],
+					 'Weights':{
+					 			'FoodMetric':1,
+			   					'BirdMetric':1,
+			   					'HawkMetric':0
+			   					},
+					 'MapChar':'H',
+					 'Image':'hawk.png',
+					 'Affects':{'HawkMetric':1},
+					 'Moves':True,
+					 'StartSkill':0
+					},
+			'Nest':{ 'Eats':['Bird'],
+					 'Weights':{},
+					 'MapChar':'N',
+					 'Image':'nest.png',
+					 'Affects':{'NestMetric':'skill'},
+					 'Moves':False,
+					 'StartSkill':0
+				   }
+			},
+ 'InsertEntity':[{'entity':'Food','label':'food','count':15},{'entity':'Bird','label':'bird','count':12}, {'entity':'Hawk','label':'hawk','count':12}],
+ 'StartPaused':True,
+ 'Win':{'NestMetric':5}
+  \end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{Game Representation - Map}
+\begin{verbatim}
+OOOOOOOOOOOOOOO
+O.............O
+O......B......O
+O.............O
+O.............O
+O...H.........O
+O........O....O
+O........O....O
+O.......FO....O
+O........O....O
+O........O....O
+O........O....O
+O........O....O
+O........O....O
+O........O....O
+OOOOOOOOOOOOOOO
+\end{verbatim}
+
  
 \end{frame}
 
-\begin{frame}{Game Representation}
- 
-\end{frame}
 
 \begin{frame}{Extensions and Enhancements}
+\begin{itemize}
+\item Flocking
+\item Genetic Algorithm to Evolve metric weights
+\item Continuous Motion
+\item Thrust Vectors
+\item Extend to 3D
 
+\end{itemize}
 \end{frame}
 
 
