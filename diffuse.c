@@ -10,7 +10,7 @@ static PyObject *diffuse(PyObject *self, PyObject *args);
 static char module_docstring[] =
     "This module provides an interface for calculating diffusion using C.";
 static char diffusion_docstring[] =
-    "Return the diffused array calculated from a 2D input array and obstacle array.";
+    "Return the diffuse array calculated from a 2D input array and obstacle array.";
 
 static PyMethodDef module_methods[] = {
     {"diffuse", diffuse, METH_VARARGS, diffusion_docstring},
@@ -60,21 +60,23 @@ int **intMatrixToCArrayPtrs(PyArrayObject *arrayin, int numCols, int numRows)  {
  * metric array and obstacle array.
  v
  * Usage: newMetricArray = diffuse(int numIterations, float rate,
- *                                 2dNpAry metricArray, 2dNpAry obstacleAry)
+ *                                 2dNpAry metricArray, 2dNpAry obstacleAry, 2dNPAry coeffArray)
  */
 static PyObject *diffuse(PyObject *self, PyObject *args) {
-    PyArrayObject *metricArray, *obstacleArray, *resultArray;
+    PyArrayObject *metricArray, *obstacleArray, *resultArray, *coeffArray, *diffuseArray;
     double rate;
-    double **cMetricArray, **cResultArray, **cObstacleArray;
+    double **cMetricArray, **cResultArray, **cObstacleArray, **cCoeffArray, **cdiffuseArray;
     int numIterations, i, left, right, up, down, col, row, numCols, numRows;
     int dimensions[2];
 
     // parse metric and obstacle arrays and check return value
-    if (!PyArg_ParseTuple(args, "idO!O!", &numIterations, &rate,
+    if (!PyArg_ParseTuple(args, "idO!O!O!O!", &numIterations, &rate,
                           &PyArray_Type, &metricArray,
-                          &PyArray_Type, &obstacleArray))
+                          &PyArray_Type, &diffuseArray,
+                          &PyArray_Type, &obstacleArray,
+                          &PyArray_Type, &coeffArray))
         return NULL;
-    if (metricArray == NULL || obstacleArray == NULL)
+    if (metricArray == NULL || obstacleArray == NULL || coeffArray == NULL)
         return NULL;
     numCols = metricArray->dimensions[0];
     numRows = metricArray->dimensions[1];
@@ -83,12 +85,14 @@ static PyObject *diffuse(PyObject *self, PyObject *args) {
     resultArray = (PyArrayObject *)PyArray_FromDims(2, dimensions, NPY_DOUBLE);
     cMetricArray = doubleMatrixToCArrayPtrs(metricArray, numCols, numRows);
     cObstacleArray = doubleMatrixToCArrayPtrs(obstacleArray, numCols, numRows);
+    cCoeffArray = doubleMatrixToCArrayPtrs(coeffArray, numCols, numRows);
     cResultArray = doubleMatrixToCArrayPtrs(resultArray, numCols, numRows);
+    cdiffuseArray = doubleMatrixToCArrayPtrs(diffuseArray, numCols, numRows);
 
     // copy metric array into result array
     for (col = 0; col < numCols; col++) {
         for (row = 0; row < numRows; row++) {
-            cResultArray[col][row] = cMetricArray[col][row];
+            cResultArray[col][row] = cdiffuseArray[col][row] ;
         }
     }
     
@@ -98,14 +102,22 @@ static PyObject *diffuse(PyObject *self, PyObject *args) {
             right = col + 1 >= numCols ? 0 : col + 1;
             for (row = 0; row < numRows; row++) {
                 // if this cell is not a goal or obstacle, diffuse
-                if (cObstacleArray[col][row] && cMetricArray[col][row] < 1.0) {
+                if (cObstacleArray[col][row] && cMetricArray[col][row] == 0.0) {
                     up = row - 1 < 0 ? numRows - 1 : row - 1;
                     down = row + 1 >= numRows ? 0 : row + 1;
+                    //diff = rate*self.neighborCoeff*self.sumOfNeighbors(diff)*mask + seed
                     // final diffusion value for col, row is the sum of neighbors times diffusion rate
-                    cResultArray[col][row] = rate * (cResultArray[left][row] +
-                                                     cResultArray[right][row] +
-                                                     cResultArray[col][up] +
-                                                     cResultArray[col][down]);
+                    cResultArray[col][row] = rate * (cdiffuseArray[left][row] +
+                                                     cdiffuseArray[right][row] +
+                                                     cdiffuseArray[col][up] +
+                                                     cdiffuseArray[col][down] +
+                                                     cdiffuseArray[left][up] +
+                                                     cdiffuseArray[left][down]+
+                                                     cdiffuseArray[right][up]+
+                                                     cdiffuseArray[right][down])* cCoeffArray[col][row];
+                }
+                else if(cMetricArray[col][row] != 0.0){
+                    cResultArray[col][row] = cMetricArray[col][row];
                 }
             }
         }
@@ -124,6 +136,7 @@ static PyObject *diffuse(PyObject *self, PyObject *args) {
     free((char*)cMetricArray);
     free((char*)cObstacleArray);
     free((char*)cResultArray);
+    free((char*)cCoeffArray);
     
     return PyArray_Return(resultArray);
 }
